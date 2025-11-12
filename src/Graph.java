@@ -3,21 +3,21 @@ import java.util.List;
 
 public class Graph {
 
-        private List<Vertex> wierzcholki = new ArrayList<>();
+        private List<Vertex> vertices = new ArrayList<>();
 
-    public Graph(List<Vertex> wierzcholki) {
-        this.wierzcholki = wierzcholki;
+    public Graph(List<Vertex> vertices) {
+        this.vertices = vertices;
     }
 
-    public void wypisz(){
-        System.out.println("\nLista wczytanych miast:");
-        for (Vertex w : this.wierzcholki) {
+    public void print(){
+        System.out.println("\nList of cities from csv(vertices:");
+        for (Vertex w : this.vertices) {
             System.out.println(w.getNumer()+". "+w.getName()+" "+w.getX()+" "+w.getY());
         }
 
     }
 
-    public double odl (Vertex w1, Vertex w2){
+    public double calculateDistance(Vertex w1, Vertex w2){
 
         double dx = w2.getX() - w1.getX();
         double dy = w2.getY() - w1.getY();
@@ -26,15 +26,15 @@ public class Graph {
     }
 
     public void addEdges() {
-        int n = wierzcholki.size();
+        int n = vertices.size();
         for (int i = 0; i < n; i++) {
-            Vertex w1 = wierzcholki.get(i);
+            Vertex w1 = vertices.get(i);
             for (int j = i + 1; j < n; j++) {
-                Vertex w2 = wierzcholki.get(j);
-                double d = odl(w1, w2);
+                Vertex w2 = vertices.get(j);
+                double d = calculateDistance(w1, w2);
                 if (d <= 10) {
-                    w1.dodajKrawedz(w2, d);
-                    w2.dodajKrawedz(w1, d);
+                    w1.addEdge(w2, d);
+                    w2.addEdge(w1, d);
                 }
             }
         }

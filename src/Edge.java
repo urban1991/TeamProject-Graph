@@ -1,30 +1,30 @@
 public class Edge {
 
-    private Vertex cel;
-    private double waga;
+    private Vertex target;
+    private double distance;
 
-    public Edge(Vertex cel, double waga) {
-        this.cel = cel;
-        this.waga = waga;
+    public Edge(Vertex target, double distance) {
+        this.target = target;
+        this.distance = distance;
     }
 
-    public Vertex getCel() {
-        return cel;
+    public Vertex getTarget() {
+        return target;
     }
 
-    public void setCel(Vertex cel) {
-        this.cel = cel;
+    public void setTarget(Vertex target) {
+        this.target = target;
     }
 
-    public double getWaga() {
-        return waga;
+    public double getDistance() {
+        return distance;
     }
 
-    public void setWaga(double waga) {
-        this.waga = waga;
+    public void setDistance(double distance) {
+        this.distance = distance;
     }
 
-    public void wypisz(){
-        System.out.println("Cel: "+cel.getName()+" waga: "+waga);
+    public void print(){
+        System.out.println("Target: "+ target.getName()+" distance: "+ distance);
     }
 }

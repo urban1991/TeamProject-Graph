@@ -3,21 +3,21 @@ import java.util.List;
 
 public class Vertex {
 
-    private static int licznikID = 0; // automatyczny licznik ID
+    private static int countID = 0; // automatyczny licznik ID
 
     private int nr;                    // numer (unikalny ID)
     private String name;
     private int x;
     private int y;
-    private List<Edge> krawedzie;
+    private List<Edge> edges;
 
     // --- Konstruktor ---
-    public Vertex(String nazwa, int x, int y) {
-        this.nr = licznikID++;         // nadaj unikalny numer
-        this.name = nazwa;
+    public Vertex(String name, int x, int y) {
+        this.nr = countID++;         // nadaj unikalny numer
+        this.name = name;
         this.x = x;
         this.y = y;
-        this.krawedzie = new ArrayList<>();
+        this.edges = new ArrayList<>();
     }
 
     // --- Gettery i settery ---
@@ -54,27 +54,27 @@ public class Vertex {
         this.y = y;
     }
 
-    public List<Edge> getKrawedzie() {
-        return krawedzie;
+    public List<Edge> getEdges() {
+        return edges;
     }
 
-    public void setKrawedzie(List<Edge> krawedzie) {
-        this.krawedzie = krawedzie;
+    public void setEdges(List<Edge> edges) {
+        this.edges = edges;
     }
 
     // --- Dodaj krawędź ---
-    public void dodajKrawedz(Vertex cel, double waga) {
+    public void addEdge(Vertex cel, double distance) {
 
-        this.krawedzie.add(new Edge(cel, waga));
+        this.edges.add(new Edge(cel, distance));
     }
 
-    public void wypisz(){
-        System.out.println("Wierzcholek nr: " + nr + " x: " + x + " y: " + y + "nazwa: " + name);
+    public void print(){
+        System.out.println("Vertex nr: " + nr + " x: " + x + " y: " + y + "name: " + name);
     }
 
-    public void wypiszKrawedzie(){
-        for (Edge edge : krawedzie) {
-            System.out.println(name +"->"+ edge.getCel().getName()+" Odległosc: "+ edge.getWaga());
+    public void printEdges(){
+        for (Edge edge : edges) {
+            System.out.println(name +"->"+ edge.getTarget().getName()+" Distance: "+ edge.getDistance());
 
         }
     }

@@ -9,42 +9,43 @@ public class Main {
 
     public static void main(String[] args) {
         String csvFile = "C:\\Users\\jakub\\IdeaProjects\\TeamProject-Graph\\polandcities.csv"; // pełna ścieżka
-        List<Vertex> wierzcholki = new ArrayList<>();
-        Graph graph = new Graph(wierzcholki);
+        List<Vertex> vertices = new ArrayList<>();
+        Graph graph = new Graph(vertices);
 
         try (BufferedReader br = new BufferedReader(new FileReader(csvFile, Charset.forName("Windows-1250")))) {
-            System.out.println("Plik otwarty!");
+            System.out.println("File opened!");
 
-            // pomiń nagłówek
+
             br.readLine();
 
             String line;
             while ((line = br.readLine()) != null) {
-                System.out.println("Wczytany wiersz: " + line);
+                System.out.println("Read line: " + line);
 
                 line = line.replaceAll(";+\\s*$", "");
 
                 String[] values = line.split(",");
                 if (values.length < 3) continue;
 
-                String nazwa = values[0].trim();
+                String name = values[0].trim();
                 double lat = Double.parseDouble(values[1].trim());
                 double lng = Double.parseDouble(values[2].trim());
 
-                Vertex w = new Vertex(nazwa, (int) (lat * 1000), (int) (lng * 1000));
-                wierzcholki.add(w);
+                Vertex w = new Vertex(name, (int) (lat * 1000), (int) (lng * 1000));
+                vertices.add(w);
             }
 
         } catch (IOException e) {
-            System.err.println("Błąd przy otwieraniu pliku: " + e.getMessage());
+            System.err.println("Failed to open file: " + e.getMessage());
             e.printStackTrace();
         }
 
-        graph.wypisz();
+        graph.addEdges();//connects nearest neighbour (up to 10km)
 
-        graph.addEdges();
 
-        wierzcholki.get(3676).wypiszKrawedzie();
+        //Test
+        graph.print();//prints vertices
+        vertices.get(3676).printEdges(); //prints edges from last vertex (Biała róża)
 
 
     }
