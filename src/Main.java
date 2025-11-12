@@ -42,7 +42,7 @@ public class Main {
 
         graph.wypisz();
 
-        graph.dodajKrawedzie();
+        graph.addEdges();
 
         wierzcholki.get(3676).wypiszKrawedzie();
 

@@ -25,7 +25,7 @@ public class Graph {
 
     }
 
-    public void dodajKrawedzie() {
+    public void addEdges() {
         int n = wierzcholki.size();
         for (int i = 0; i < n; i++) {
             Vertex w1 = wierzcholki.get(i);
