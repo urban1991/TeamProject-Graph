@@ -3,25 +3,24 @@ import java.util.List;
 
 public class Graph {
 
-        private List<Vertex> vertices = new ArrayList<>();
+    private List<Vertex> vertices = new ArrayList<>();
 
     public Graph(List<Vertex> vertices) {
         this.vertices = vertices;
     }
 
-    public void print(){
+    public void print() {
         System.out.println("\nList of cities from csv(vertices:");
         for (Vertex w : this.vertices) {
-            System.out.println(w.getNumer()+". "+w.getName()+" "+w.getX()+" "+w.getY());
+            System.out.println(w.getNumber() + ". " + w.getName() + " " + w.getX() + " " + w.getY());
         }
-
     }
 
-    public double calculateDistance(Vertex w1, Vertex w2){
+    public double calculateDistance(Vertex w1, Vertex w2) {
 
         double dx = w2.getX() - w1.getX();
         double dy = w2.getY() - w1.getY();
-        return Math.sqrt(dx * dx + dy * dy)*0.1073;
+        return Math.sqrt(dx * dx + dy * dy) * 0.1073;
 
     }
 

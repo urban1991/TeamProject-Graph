@@ -5,7 +5,6 @@ public class Vertex {
 
     private static int countID = 0; // auto ID counter
 
-
     private int nr;                    // unique ID
     private String name;
     private int x;
@@ -21,8 +20,8 @@ public class Vertex {
         this.edges = new ArrayList<>();
     }
 
-    // --- Gettery i settery ---
-    public int getNumer() {
+    // --- Getters and Setters ---
+    public int getNumber() {
         return nr;
     }
 
@@ -63,7 +62,7 @@ public class Vertex {
         this.edges = edges;
     }
 
-    // --- Dodaj krawędź ---
+    // --- Add edge ---
     public void addEdge(Vertex cel, double distance) {
 
         this.edges.add(new Edge(cel, distance));
@@ -79,5 +78,4 @@ public class Vertex {
 
         }
     }
-
 }

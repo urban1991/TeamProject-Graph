@@ -15,7 +15,6 @@ public class Main {
         try (BufferedReader br = new BufferedReader(new FileReader(csvFile, Charset.forName("Windows-1250")))) {
             System.out.println("File opened!");
 
-
             br.readLine();
 
             String line;
@@ -40,14 +39,12 @@ public class Main {
             e.printStackTrace();
         }
 
-        graph.addEdges();//connects nearest neighbour (up to 10km)
+        graph.addEdges(); //connects nearest neighbour (up to 10km)
 
 
         //Test
-        graph.print();//prints vertices
+        graph.print(); //prints vertices
         vertices.get(3676).printEdges(); //prints edges from last vertex (Biała róża)
-
-
     }
 }
 
