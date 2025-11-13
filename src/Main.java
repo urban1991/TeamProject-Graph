@@ -8,7 +8,7 @@ import java.util.List;
 public class Main {
 
     public static void main(String[] args) {
-        String csvFile = "C:\\Users\\jakub\\IdeaProjects\\TeamProject-Graph\\polandcities.csv"; // pełna ścieżka
+        String csvFile = "C:\\Users\\jakub\\IdeaProjects\\TeamProject-Graph\\polandcities.csv"; // full path
         List<Vertex> vertices = new ArrayList<>();
         Graph graph = new Graph(vertices);
 

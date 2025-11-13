@@ -3,9 +3,10 @@ import java.util.List;
 
 public class Vertex {
 
-    private static int countID = 0; // automatyczny licznik ID
+    private static int countID = 0; // auto ID counter
 
-    private int nr;                    // numer (unikalny ID)
+
+    private int nr;                    // unique ID
     private String name;
     private int x;
     private int y;
@@ -13,7 +14,7 @@ public class Vertex {
 
     // --- Konstruktor ---
     public Vertex(String name, int x, int y) {
-        this.nr = countID++;         // nadaj unikalny numer
+        this.nr = countID++;         // sets unique ID from counter
         this.name = name;
         this.x = x;
         this.y = y;
