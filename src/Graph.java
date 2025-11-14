@@ -39,6 +39,10 @@ public class Graph {
             }
         }
     }
+
+    public List<Vertex> getVertices() {
+        return vertices;
+    }
 }
 
 

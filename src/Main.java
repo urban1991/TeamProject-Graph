@@ -47,6 +47,8 @@ public class Main {
         graph.print();//prints vertices
         vertices.get(3676).printEdges(); //prints edges from last vertex (Biała róża)
 
+        List<Vertex> path =
+
 
     }
 }
