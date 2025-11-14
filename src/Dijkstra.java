@@ -47,7 +47,7 @@ public class Dijkstra {
         return path;
     }
 
-    public static void PrintPath(List<Vertex> path){
+    public static void PrintPath(List<Vertex> path) {
         System.out.print("Shortest path from " + path.get(0).getName() + " to " + path.get(path.size() - 1).getName() + ":");
         System.out.println();
         for (Vertex v : path) {

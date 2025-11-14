@@ -40,7 +40,7 @@ public class Main {
             e.printStackTrace();
         }
 
-        graph.addEdges();//connects nearest neighbour (up to 10km)
+        graph.addEdges();//connects nearest neighbour (up to 20km)
 
 
         //Test
