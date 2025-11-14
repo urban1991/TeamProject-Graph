@@ -47,7 +47,9 @@ public class Main {
         graph.print();//prints vertices
         vertices.get(3676).printEdges(); //prints edges from last vertex (Biała róża)
 
-        List<Vertex> path =
+        List<Vertex> path = Dijkstra.findShortestPath(vertices.get(3676), vertices.get(5), graph);
+
+        Dijkstra.PrintPath(path);
 
 
     }

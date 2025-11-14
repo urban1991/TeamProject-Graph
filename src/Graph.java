@@ -32,7 +32,7 @@ public class Graph {
             for (int j = i + 1; j < n; j++) {
                 Vertex w2 = vertices.get(j);
                 double d = calculateDistance(w1, w2);
-                if (d <= 10) {
+                if (d <= 30) {
                     w1.addEdge(w2, d);
                     w2.addEdge(w1, d);
                 }

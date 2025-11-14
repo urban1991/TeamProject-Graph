@@ -2,7 +2,7 @@ import java.util.*;
 
 public class Dijkstra {
 
-    public List<Vertex> findShortestPath(Vertex start, Vertex target, Graph graph) {
+    public static List<Vertex> findShortestPath(Vertex start, Vertex target, Graph graph) {
 
         Map<Vertex, Double> distance = new HashMap<>();
         Map<Vertex, Vertex> predecessor = new HashMap<>();
@@ -47,10 +47,12 @@ public class Dijkstra {
         return path;
     }
 
-    public void PrintPath(List<Vertex> path){
-        System.out.print("Shortest path: ");
+    public static void PrintPath(List<Vertex> path){
+        System.out.print("Shortest path from " + path.get(0).getName() + " to " + path.get(path.size() - 1).getName() + ":");
+        System.out.println();
         for (Vertex v : path) {
             System.out.print(v.getName() + " -> ");
         }
+        System.out.println("END");
     }
 }
