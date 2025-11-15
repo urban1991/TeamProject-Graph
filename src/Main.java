@@ -49,7 +49,7 @@ public class Main {
 
         List<Vertex> path = Dijkstra.findShortestPath(vertices.get(3676), vertices.get(5), graph);
 
-        Dijkstra.PrintPath(path);
+        Dijkstra.printPath(path);
 
 
     }
