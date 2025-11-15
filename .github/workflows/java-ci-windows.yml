@@ -25,11 +25,15 @@ jobs:
           New-Item -ItemType Directory -Force -Path out | Out-Null
           javac -d out -encoding UTF-8 src/*.java
 
-      - name: Verify application runs
+      - name: Verify application runs (assert output)
         shell: pwsh
         run: |
           if (-not (Test-Path 'polandcities.csv')) { throw 'polandcities.csv not found' }
-          java -cp out Main polandcities.csv
+          $p = Start-Process -FilePath "java" -ArgumentList "-cp","out","Main","polandcities.csv" -NoNewWindow -RedirectStandardOutput run.log -PassThru -Wait
+          if ($p.ExitCode -ne 0) { throw "App exit code: $($p.ExitCode)" }
+          if (-not (Get-Item run.log).Length) { throw "Empty output" }
+          $content = Get-Content run.log -Raw
+          if ($content -notmatch "Warszawa|Kraków|Wrocław") { throw "[CI] Brak oczekiwanych miast w output" }
 
       - name: Upload compiled classes (artifact)
         uses: actions/upload-artifact@v4
