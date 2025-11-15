@@ -2,13 +2,17 @@ import java.util.*;
 
 public class Dijkstra {
 
+    public static double Infinity = Double.POSITIVE_INFINITY;
+
     public static List<Vertex> findShortestPath(Vertex start, Vertex target, Graph graph) {
 
         Map<Vertex, Double> distance = new HashMap<>();
         Map<Vertex, Vertex> predecessor = new HashMap<>();
 
+
+
         for (Vertex v : graph.getVertices()) {
-            distance.put(v, Double.POSITIVE_INFINITY);
+            distance.put(v, Infinity);
             predecessor.put(v, null);
         }
 
