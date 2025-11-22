@@ -12,6 +12,13 @@ public class Vertex {
     private int y;
     private List<Edge> edges;
 
+    // --- POLA DLA BFS ---
+    private boolean visited = false;
+    private int distance = Integer.MAX_VALUE; // Dystans od startu, MAX_VALUE to symbol nieskończoności
+    private Vertex parent = null;           // Poprzednik na najkrótszej ścieżce
+
+
+
     // --- Konstruktor ---
     public Vertex(String name, int x, int y) {
         this.nr = countID++;         // sets unique ID from counter
@@ -78,6 +85,31 @@ public class Vertex {
             System.out.println(name +"->"+ edge.getTarget().getName()+" Distance: "+ edge.getDistance());
 
         }
+    }
+
+    // --- METODY DLA BFS ---
+    public boolean isVisited() {
+        return visited;
+    }
+
+    public void setVisited(boolean visited) {
+        this.visited = visited;
+    }
+
+    public int getDistance() {
+        return distance;
+    }
+
+    public void setDistance(int distance) {
+        this.distance = distance;
+    }
+
+    public Vertex getParent() {
+        return parent;
+    }
+
+    public void setParent(Vertex parent) {
+        this.parent = parent;
     }
 
 }
