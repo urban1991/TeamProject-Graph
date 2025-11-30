@@ -7,6 +7,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class GraphController {
@@ -22,17 +23,18 @@ public class GraphController {
 
         if (graph != null) {
             outputArea.appendText("Graph successfully loaded!\n\n");
-            outputArea.appendText("--- VERTEX LIST ---\n");
 
             List<Vertex> vertices = graph.getVertices();
 
+            // --- 1. EXISTING VERTEX PRINTING LOGIC ---
+            outputArea.appendText("--- VERTEX LIST ---\n");
             for (Vertex v : vertices) {
                 String vertexInfo = String.format("Nr: %d | City: %s (X: %d, Y: %d)\n",
                         v.getNumber(), v.getName(), v.getX(), v.getY());
                 outputArea.appendText(vertexInfo);
             }
 
-
+            // --- 2. EXISTING NEIGHBOR CHECK ---
             int firstTestIndex = 10;
             int lastTestIndex = vertices.size() - 1;
 
@@ -51,7 +53,66 @@ public class GraphController {
                         testV.getName(), lastTestIndex));
                 testV.printEdgesToGui(outputArea);
             }
+
+            // --- 3. YOUR NEW BFS TESTING LOGIC ---
+            runBFSTest(graph, vertices);
         }
+    }
+
+    private void runBFSTest(Graph graph, List<Vertex> vertices) {
+        outputArea.appendText("\n==================================\n");
+        outputArea.appendText("       BFS ALGORITHM TEST       \n");
+        outputArea.appendText("==================================\n");
+
+        System.out.println("Graf zbudowany. Liczba wierzchołków: " + vertices.size());
+
+        if (vertices.isEmpty()) {
+            outputArea.appendText("Brak wierzchołków w grafie.\n");
+            return;
+        }
+
+        Vertex startNode = vertices.get(0);
+        Vertex targetNode = vertices.size() > 1000 ? vertices.get(1000) : vertices.get(vertices.size() - 1);
+
+        outputArea.appendText("--- START: Uruchamianie BFS ---\n");
+        outputArea.appendText("Wierzchołek startowy: " + startNode.getName() + "\n");
+        outputArea.appendText("Wierzchołek docelowy: " + targetNode.getName() + "\n");
+
+        BFS bfsAlgorithm = new BFS();
+        bfsAlgorithm.runBFS(graph, startNode);
+
+        outputArea.appendText("--- KONIEC: BFS zakończony ---\n");
+        outputArea.appendText("\n--- Wyniki BFS ---\n");
+
+        // Sprawdzenie odległości
+        int distance = targetNode.getDistance();
+
+        if (distance == Integer.MAX_VALUE) {
+            outputArea.appendText("Wierzchołek " + targetNode.getName() +
+                    " jest nieosiągalny z " + startNode.getName() + ".\n");
+        } else {
+            outputArea.appendText("Najkrótsza odległość krawędziowa (liczba kroków) z " + startNode.getName() +
+                    " do " + targetNode.getName() + " wynosi: " + distance + "\n");
+
+            outputArea.appendText("Ścieżka: ");
+            String pathString = getPathString(targetNode);
+            outputArea.appendText(pathString + "\n");
+        }
+    }
+
+    // Helper method to generate the path string (modified from your printPath void method)
+    private String getPathString(Vertex target) {
+        List<String> path = new ArrayList<>();
+        Vertex current = target;
+
+        while (current != null) {
+            path.add(current.getName());
+            current = current.getParent();
+        }
+
+        Collections.reverse(path);
+
+        return String.join(" -> ", path);
     }
 
     private Graph loadGraphData() {
