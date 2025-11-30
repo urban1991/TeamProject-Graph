@@ -1,3 +1,5 @@
+package org.graph.graphproject;
+
 import java.util.*;
 
 public class Dijkstra {

@@ -56,6 +56,9 @@ public class GraphController {
 
             // --- 3. YOUR NEW BFS TESTING LOGIC ---
             runBFSTest(graph, vertices);
+            List<Vertex> path = Dijkstra.findShortestPath(vertices.get(3676), vertices.get(5), graph);
+
+            Dijkstra.printPath(path);
         }
     }
 
