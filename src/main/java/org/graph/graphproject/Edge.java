@@ -25,7 +25,7 @@ public class Edge {
         this.distance = distance;
     }
 
-    public void print(){
-        System.out.println("Target: "+ target.getName()+" distance: "+ distance);
+    public void print() {
+        System.out.println("Target: " + target.getName() + " distance: " + distance);
     }
 }
