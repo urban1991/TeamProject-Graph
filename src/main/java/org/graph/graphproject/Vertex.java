@@ -1,10 +1,10 @@
+package org.graph.graphproject;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public class Vertex {
-
     private static int countID = 0; // auto ID counter
-
 
     private int nr;                    // unique ID
     private String name;
@@ -12,14 +12,14 @@ public class Vertex {
     private int y;
     private List<Edge> edges;
 
-    // --- POLA DLA BFS ---
+    // --- FIELDS FOR BFS ---
     private boolean visited = false;
     private int distance = Integer.MAX_VALUE; // Dystans od startu, MAX_VALUE to symbol nieskończoności
     private Vertex parent = null;           // Poprzednik na najkrótszej ścieżce
 
 
 
-    // --- Konstruktor ---
+    // --- Construktor ---
     public Vertex(String name, int x, int y) {
         this.nr = countID++;         // sets unique ID from counter
         this.name = name;
@@ -28,13 +28,13 @@ public class Vertex {
         this.edges = new ArrayList<>();
     }
 
-    // --- Gettery i settery ---
-    public int getNumer() {
+    // --- Getters & Setters ---
+    public int getNumber() {
         return nr;
     }
 
-    public void setNumer(int numer) {
-        this.nr = numer;
+    public void setNumber(int number) {
+        this.nr = number;
     }
 
 
@@ -70,7 +70,7 @@ public class Vertex {
         this.edges = edges;
     }
 
-    // --- Dodaj krawędź ---
+    // --- Add edge ---
     public void addEdge(Vertex cel, double distance) {
 
         this.edges.add(new Edge(cel, distance));
@@ -83,11 +83,23 @@ public class Vertex {
     public void printEdges(){
         for (Edge edge : edges) {
             System.out.println(name +"->"+ edge.getTarget().getName()+" Distance: "+ edge.getDistance());
-
         }
     }
 
-    // --- METODY DLA BFS ---
+    public void printEdgesToGui(javafx.scene.control.TextArea outputArea){
+        outputArea.appendText("Edges from " + name + ":\n");
+        if (edges.isEmpty()) {
+            outputArea.appendText("  (No edge lower than 10 km)\n");
+            return;
+        }
+        for (Edge edge : edges) {
+            outputArea.appendText(String.format("  -> %s | Distance: %.2f km\n",
+                    edge.getTarget().getName(),
+                    edge.getDistance()));
+        }
+    }
+
+    // --- METHODS FOR BFS ---
     public boolean isVisited() {
         return visited;
     }
