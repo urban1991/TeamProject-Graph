@@ -1,5 +1,6 @@
-public class Edge {
+package org.graph.graphproject;
 
+public class Edge {
     private Vertex target;
     private double distance;
 
