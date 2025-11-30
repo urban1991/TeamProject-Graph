@@ -17,6 +17,11 @@ public class Graph {
         this.vertices = vertices;
     }
 
+    public List<Vertex> getAllVertices() {
+        return this.vertices;
+    }
+
+
     public void addVertex(Vertex vertex) {
         this.vertices.add(vertex);
     }
@@ -49,24 +54,16 @@ public class Graph {
         }
     }
 
-    // --- METODA DLA BFS 1: Zwraca listę wszystkich wierzchołków ---
-    public List<Vertex> getAllVertices() {
-        return this.vertices;
-    }
-
-    // --- METODA DLA BFS 2: Zwraca sąsiadów danego wierzchołka ---
-    // (Klasa BFS tego użyje)
-    public List<Vertex> getNeighbors(Vertex u) {
+    public List<Vertex> getNeighbors(Vertex vertex) {
         List<Vertex> neighbors = new ArrayList<>();
 
-        // Przechodzimy przez wszystkie krawędzie wychodzące z 'u'
-        for (Edge edge : u.getEdges()) {
+        // Go through all edges starting from vertex
+        for (Edge edge : vertex.getEdges()) {
             neighbors.add(edge.getTarget());
         }
         return neighbors;
     }
 
-    // Opcjonalnie, ale zalecane: Metoda resetująca stan wszystkich wierzchołków
     public void resetAllVertices() {
         for (Vertex v : this.vertices) {
             v.setVisited(false);
