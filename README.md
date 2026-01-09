@@ -1,106 +1,61 @@
-# 🚀 TeamProject-Graph — Shortest Paths (BFS, Dijkstra, A*) with Swing UI
+# 🚀 TeamProject-Graph — Pathfinding Visualization (BFS, Dijkstra, A*)
 
-This project implements shortest-path search in graphs using classical and heuristic algorithms. The code is written in Java and will include a multi‑functional Swing UI to visualize the search process and the resulting paths.
+This project implements an advanced pathfinding system for graph-based environments, specifically focused on geographical maps of Poland. It features a modern JavaFX interface integrated with an interactive map visualization (OpenStreetMap via Leaflet.js).
 
-## 🎯 Project Goal
-Design and implement a system that finds shortest paths in a graph (e.g., grid, map, network) between selected start and goal nodes. The system supports:
-- BFS (Breadth-First Search) — shortest paths in unweighted graphs,
-- Dijkstra’s Algorithm — shortest paths in weighted graphs (non‑negative weights),
-- A* (A‑star) — heuristic search (e.g., Euclidean or Manhattan), optimal under an admissible heuristic.
+## 🎯 Project Overview
+The goal of this project is to find and visualize the shortest paths between cities in Poland using various algorithms. The system allows users to interactively build the graph, set custom edge weights, and analyze the efficiency of different search approaches.
 
-The project also covers complexity and performance analysis and an optional visualization of the search state (visited nodes, frontier/open set, final path) in the Swing UI.
+### Supported Algorithms:
+- **BFS (Breadth-First Search)**: Finds the path with the minimum number of hops (ideal for unweighted graphs).
+- **Dijkstra’s Algorithm**: Finds the shortest path based on actual edge weights (geographic distance or custom weights).
+- **A* (A-Star)**: Uses a Euclidean distance heuristic to find the optimal path while exploring significantly fewer nodes.
 
-## 📦 Current Status (WIP)
-The repository contains an initial graph representation of Polish cities loaded from `polandcities.csv` and a simple nearest‑neighbor edge builder (up to ~10 km). Implementations of BFS, Dijkstra, A*, and the Swing UI are planned next.
-
-## ✨ Planned Features
-- Adjacency‑list graph representation (`Vertex`, `Edge`, `Graph`).
-- FileReaders for CSV.
-- Shortest path algorithms:
-  - BFS — for unweighted graphs (minimize edge count),
-  - Dijkstra — for weighted graphs (minimize total weight),
-  - A* — heuristic version with optimality under an admissible heuristic (e.g., Euclidean/Manhattan).
-- Performance comparison (time/memory) across different graph sizes/densities.
-- Swing UI for interactive visualization:
-  - graph view, start/goal selection,
-  - visualization of visited nodes and edges,
-  - final path and statistics (visited count, cost, time),
-  - dialog to choose algorithm and A* heuristic.
+## ✨ Key Features
+- **Interactive Map**: Visualize thousands of cities on an OpenStreetMap. Zoom, pan, and click to select start/target nodes directly from the map.
+- **Searchable Selectors**: Quickly find cities using modern Searchable ComboBox components with real-time filtering.
+- **Dynamic Graph Rebuilding**: Adjust the **Neighbor Radius** to control how dense the connectivity should be between cities.
+- **Custom Edge Weights**: Override geographic distances between specific cities to simulate traffic, road closures, or different costs.
+- **Algorithm Comparison**: View real-time statistics (time in ms, nodes visited, total distance) and see which algorithm performed best for a given route.
+- **Path Exploration**: The map visualizes not only the final path but also all the nodes explored by the algorithm (represented as a "fala" for Dijkstra or a targeted search for A*).
 
 ## 🧱 Project Structure
-- `src/Main.java` — app entry point, CSV loading, graph initialization.
-- `src/Graph.java` — graph representation, edge building, helpers.
-- `src/Vertex.java` — graph node (ID, name, coordinates, edge list).
-- `src/Edge.java` — graph edge (target node, weight/distance).
-- `polandcities.csv` — input data (Polish cities). (for development only)
-
-Planned additions: `BfsPathfinder`, `DijkstraPathfinder`, `AStarPathfinder`, common `Pathfinder` interface, and Swing modules (`GraphPanel`, `ControlPanel`, etc.).
+- `org.graph.graphproject.BFS/Dijkstra/AStar`: Algorithm implementations.
+- `org.graph.graphproject.Graph`: Adjacency-list representation with optimized grid-based neighbor searching.
+- `org.graph.graphproject.GraphLoader`: CSV parser for city data.
+- `org.graph.graphproject.GraphController`: UI logic and Java-JavaScript bridge.
+- `resources/org/graph/graphproject/graph-view.html`: Leaflet-based map visualization.
 
 ## 🛠 Prerequisites
-- Java 17+ (JDK 17 or newer recommended).
-- IntelliJ IDEA or another Java IDE.
-- OS: Windows/macOS/Linux.
+- **Java 17+** (JDK 17 or newer).
+- **Gradle** (included wrapper can be used).
 
-Note: `Main.java` currently contains an example absolute Windows path to the CSV. Adjust it for your environment or switch to a relative path before running.
-
-## ▶️ Build & Run (for now)
-Since there is no build system yet, compile/run directly:
-
-1) Compile sources (from project root):
+## ▶️ Build & Run
+To run the application, use the following Gradle command:
 ```bash
-javac -d out src/*.java
-```
-2) Run:
-```bash
-java -cp out Main
+./gradlew run
 ```
 
-In IntelliJ IDEA: create an Application run configuration with `Main` as the main class, and ensure the CSV path is valid.
+## 🧪 Testing
+The project includes a comprehensive test suite covering algorithms, graph building, and data loading.
+To run tests:
+```bash
+./gradlew test
+```
+Test results can be found in `build/reports/tests/test/index.html`.
 
-We plan to add a build tool (e.g., Gradle) and CLI/GUI parameters for data file selection.
+## 🚀 Continuous Integration & Deployment
+This project uses **GitHub Actions** for automated:
+- **Testing**: Every push and pull request to the `main` branch triggers the test suite across Windows, Linux, and macOS.
+- **Building**: Automatic generation of optimized runtime images using `jlink`.
+- **Releases**: Tagged versions (e.g., `v1.0.0`) automatically create a **GitHub Release** with downloadable binaries for all three major operating systems.
 
-## 🧠 Algorithms & Properties
-### BFS
-- Use case: unweighted graphs.
-- Guarantee: returns a path with the minimum number of edges.
-- Complexity: O(V + E) time, O(V) space.
+## 📂 Data Format
+The application expects a CSV file with the following columns:
+`CityName, Latitude, Longitude`
+Example: `Warszawa, 52.229, 21.012`
 
-### Dijkstra
-- Use case: weighted graphs with non‑negative weights.
-- Guarantee: minimum total weight from the source to all nodes (or a target).
-- Complexity: O((V + E) log V) with a priority queue (`PriorityQueue`).
+By default, the application loads `polandcities.csv` from the root directory.
 
-### A*
-- Use case: large search spaces; a good heuristic reduces explored nodes.
-- Example heuristics: Euclidean, Manhattan (for grids).
-- Optimality condition: admissible heuristic (never overestimates) ⇒ optimal path.
-- Complexity: heuristic‑dependent; often explores fewer nodes than Dijkstra in practice.
-
-## 📈 Performance Analysis (plan)
-- Compare time and memory for BFS / Dijkstra / A* across varying graph sizes/densities.
-- Collect metrics: visited node count, priority queue ops, execution time, memory usage.
-- Produce a short report with figures.
-
-## 🖥 Swing UI (plan)
-- Graph drawing panel (zoom, pan, node selection).
-- Controls for algorithm choice, start/goal selection, animation speed.
-- Inspect neighbors/weights and frontier/open set state.
-- Import/export graph (CSV/JSON) and screenshots.
-
-## 📂 Input Data
-- `polandcities.csv`: city name, latitude, longitude.
-- Edge building: currently connects city pairs within ~10 km (simple threshold using scaled Euclidean distance).
-
-## 🧪 Tests (plan)
-- Unit/integration tests for:
-  - path correctness (BFS/Dijkstra/A*),
-  - edge cases (disconnected graph, multiple goals, no path),
-  - weight/heuristic consistency,
-  - stability and performance on larger graphs.
-
-## 🤝 Contributing
-1. Create a feature/bugfix branch.
-2. Add tests for new functionality.
-3. Write clear, concise commit messages.
-4. Open a Pull Request for review.
+## 🤝 Team
+Project developed as part of a team effort for algorithmic design and implementation.
 
