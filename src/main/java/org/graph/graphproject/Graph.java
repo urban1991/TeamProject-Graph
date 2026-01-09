@@ -39,16 +39,46 @@ public class Graph {
         return Math.sqrt(dx * dx + dy * dy)*0.1073;
     }
 
-    public void addEdges() {
-        int n = vertices.size();
-        for (int i = 0; i < n; i++) {
-            Vertex w1 = vertices.get(i);
-            for (int j = i + 1; j < n; j++) {
-                Vertex w2 = vertices.get(j);
-                double d = calculateDistance(w1, w2);
-                if (d <= 30) {
-                    w1.addEdge(w2, d);
-                    w2.addEdge(w1, d);
+    public void addEdges(double threshold) {
+        if (vertices.isEmpty()) return;
+        
+        // Clear existing edges if any
+        for (Vertex v : vertices) {
+            v.getEdges().clear();
+        }
+
+        // 1 degree lat is ~111km. Our units are 1000 * degrees.
+        // So threshold km is roughly threshold/0.111 = threshold * 9.0 units.
+        // We adjust cellSize to be proportional to threshold to keep grid efficient
+        int cellSize = (int)(threshold * 10); 
+        if (cellSize < 10) cellSize = 10;
+        
+        java.util.Map<String, List<Vertex>> grid = new java.util.HashMap<>();
+        for (Vertex v : vertices) {
+            int gx = v.getX() / cellSize;
+            int gy = v.getY() / cellSize;
+            String key = gx + ":" + gy;
+            grid.computeIfAbsent(key, k -> new ArrayList<>()).add(v);
+        }
+        
+        for (Vertex v1 : vertices) {
+            int gx = v1.getX() / cellSize;
+            int gy = v1.getY() / cellSize;
+            
+            for (int i = -1; i <= 1; i++) {
+                for (int j = -1; j <= 1; j++) {
+                    String key = (gx + i) + ":" + (gy + j);
+                    List<Vertex> cellVertices = grid.get(key);
+                    if (cellVertices == null) continue;
+                    
+                    for (Vertex v2 : cellVertices) {
+                        if (v1.getNumber() >= v2.getNumber()) continue; 
+                        double d = calculateDistance(v1, v2);
+                        if (d <= threshold) {
+                            v1.addEdge(v2, d);
+                            v2.addEdge(v1, d);
+                        }
+                    }
                 }
             }
         }
@@ -62,14 +92,6 @@ public class Graph {
             neighbors.add(edge.getTarget());
         }
         return neighbors;
-    }
-
-    public void resetAllVertices() {
-        for (Vertex v : this.vertices) {
-            v.setVisited(false);
-            v.setDistance(Integer.MAX_VALUE);
-            v.setParent(null);
-        }
     }
 }
 
