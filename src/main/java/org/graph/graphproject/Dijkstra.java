@@ -6,25 +6,33 @@ public class Dijkstra {
 
     public static double Infinity = Double.POSITIVE_INFINITY;
 
-    public static List<Vertex> findShortestPath(Vertex start, Vertex target, Graph graph) {
+    private static record Node(Vertex vertex, double distance) {}
+
+    public static PathfindingResult findShortestPath(Vertex start, Vertex target, Graph graph) {
+        long startTime = System.nanoTime();
+        List<Vertex> exploredNodes = new ArrayList<>();
 
         Map<Vertex, Double> distance = new HashMap<>();
         Map<Vertex, Vertex> predecessor = new HashMap<>();
 
-
-
         for (Vertex v : graph.getVertices()) {
             distance.put(v, Infinity);
-            predecessor.put(v, null);
         }
 
         distance.put(start, 0.0);
 
-        PriorityQueue<Vertex> queue = new PriorityQueue<>(Comparator.comparingDouble(distance::get));
-        queue.add(start);
+        PriorityQueue<Node> queue = new PriorityQueue<>(Comparator.comparingDouble(Node::distance));
+        queue.add(new Node(start, 0.0));
+
+        Set<Vertex> settled = new HashSet<>();
 
         while (!queue.isEmpty()) {
-            Vertex v = queue.poll();
+            Node node = queue.poll();
+            Vertex v = node.vertex();
+
+            if (settled.contains(v)) continue;
+            settled.add(v);
+            exploredNodes.add(v);
 
             if (v == target) break;
 
@@ -37,7 +45,7 @@ public class Dijkstra {
                 if (newDistance < distance.get(u)) {
                     distance.put(u, newDistance);
                     predecessor.put(u, v);
-                    queue.add(u);
+                    queue.add(new Node(u, newDistance));
                 }
             }
         }
@@ -50,7 +58,11 @@ public class Dijkstra {
 
         if (!path.isEmpty() && path.get(0) != start) path.clear();
 
-        return path;
+        long endTime = System.nanoTime();
+        double durationMs = (endTime - startTime) / 1_000_000.0;
+        double totalCost = path.isEmpty() ? 0 : distance.get(target);
+
+        return new PathfindingResult(path, exploredNodes, exploredNodes.size(), durationMs, totalCost);
     }
 
     public static void printPath(List<Vertex> path) {
