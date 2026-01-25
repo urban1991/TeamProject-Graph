@@ -61,3 +61,7 @@ jlink {
         }
     }
 }
+
+tasks.named("jlinkZip") {
+    dependsOn("jpackageImage")
+}
