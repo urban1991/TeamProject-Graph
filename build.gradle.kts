@@ -47,10 +47,9 @@ tasks.withType<Test> {
 }
 
 jlink {
-    imageZip.set(layout.buildDirectory.file("distributions/app-${javafx.platform.classifier}.zip"))
     options.set(listOf("--strip-debug", "--compress", "2", "--no-header-files", "--no-man-pages"))
     launcher {
-        name = "app"
+        name = "GraphApp"
     }
     jpackage {
         imageName = "GraphApp"
@@ -62,23 +61,6 @@ jlink {
     }
 }
 
-val createPortableApp by tasks.registering(Sync::class) {
-    group = "distribution"
-    description = "folder z aplikacją gotową do uruchomienia bez instalacji."
-
-    dependsOn("jlink")
-
-    from(layout.buildDirectory.dir("image"))
-
-    into(layout.buildDirectory.dir("distributions/GraphApp-Portable"))
-}
-
-
 tasks.jpackage {
     dependsOn("jlink")
-    mustRunAfter(createPortableApp)
-}
-
-tasks.jlinkZip {
-    mustRunAfter("jpackage")
 }

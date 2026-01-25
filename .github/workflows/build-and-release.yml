@@ -13,12 +13,8 @@ permissions:
 
 jobs:
   build:
-    name: Build on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+    name: Build on Windows
+    runs-on: windows-latest
 
     steps:
     - uses: actions/checkout@v4
@@ -30,28 +26,18 @@ jobs:
         distribution: 'temurin'
         cache: gradle
 
-    - name: Grant execute permission for gradlew
-      run: chmod +x gradlew
-      if: runner.os != 'Windows'
-
     - name: Run Tests
       run: ./gradlew test
 
     - name: Build with jlink and jpackage
-      run: ./gradlew jlinkZip jpackage
+      run: ./gradlew jpackage
 
     - name: Upload Artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: build-artifacts-${{ matrix.os }}
+        name: build-artifacts-windows
         path: |
-          build/distributions/*.zip
           build/jpackage/*.exe
-          build/jpackage/*.msi
-          build/jpackage/*.dmg
-          build/jpackage/*.pkg
-          build/jpackage/*.deb
-          build/jpackage/*.rpm
 
   release:
     name: Create GitHub Release
@@ -72,13 +58,7 @@ jobs:
       uses: softprops/action-gh-release@v2
       with:
         files: |
-          artifacts/*.zip
           artifacts/*.exe
-          artifacts/*.msi
-          artifacts/*.dmg
-          artifacts/*.pkg
-          artifacts/*.deb
-          artifacts/*.rpm
         tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || format('build-{0}-{1}', github.ref_name, github.run_number) }}
         name: ${{ startsWith(github.ref, 'refs/tags/') && format('Release {0}', github.ref_name) || format('Build {0} - {1}', github.ref_name, github.run_number) }}
         prerelease: ${{ !startsWith(github.ref, 'refs/tags/') }}
