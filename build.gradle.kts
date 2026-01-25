@@ -62,6 +62,10 @@ jlink {
     }
 }
 
-tasks.named("jlinkZip") {
-    dependsOn("jpackageImage")
+tasks.jpackage {
+    dependsOn("jlink")
+}
+
+tasks.jlinkZip {
+    mustRunAfter("jpackage")
 }
