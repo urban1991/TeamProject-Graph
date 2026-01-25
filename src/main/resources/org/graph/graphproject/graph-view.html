@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Graph Visualization</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://a.basemaps.cartocdn.com">
+    <link rel="preconnect" href="https://b.basemaps.cartocdn.com">
+    <link rel="preconnect" href="https://c.basemaps.cartocdn.com">
+    <link rel="preconnect" href="https://d.basemaps.cartocdn.com">
+    <link rel="stylesheet" href="leaflet/leaflet.css" />
+    <script>
+        // Disable 3D transformations for better stability in JavaFX WebView
+        window.L_DISABLE_3D = true;
+    </script>
+    <script src="leaflet/leaflet.js"></script>
+    <style>
+        html, body { height: 100%; margin: 0; padding: 0; }
+        #map { height: 100%; width: 100%; background: #f0f0f0; }
+        body { font-family: "Roboto Light",serif }
+        .leaflet-tile-container img {
+            image-rendering: -webkit-optimize-contrast;
+        }
+        .leaflet-popup-content button {
+            padding: 5px 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .leaflet-popup-content button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+<div id="map"></div>
+<script>
+    // Initialize renderer with tolerance for easier clicking
+    const myRenderer = L.canvas({ padding: 0.5, tolerance: 10 });
+
+    // Set default icon path
+    L.Icon.Default.imagePath = 'leaflet/images/';
+
+    // Create a global map reference (exposed on window) so JavaFX WebEngine.executeScript can access it.
+    // Use `var` to ensure a global binding that is reachable from global script evaluation.
+    var map = window.map = L.map('map', {
+        preferCanvas: true,
+        renderer: myRenderer,
+        zoomAnimation: false,
+        fadeAnimation: false,
+        markerZoomAnimation: false
+    }).setView([52.0, 19.0], 6);
+
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+        maxZoom: 20,
+        attribution: '© OpenStreetMap © CartoDB',
+        subdomains: 'abcd',
+        updateWhenIdle: false,
+        updateWhenZooming: true,
+        updateInterval: 100,
+        keepBuffer: 4
+    }).addTo(map);
+
+    // Force tile refresh on zoomend and viewreset to avoid gray squares in WebView
+    map.on('zoomend viewreset', function() {
+        if (window.map) window.map.invalidateSize();
+    });
+
+    // Layer groups - order matters for drawing order on Canvas
+    const exploredGroup = L.layerGroup().addTo(map);
+    const pathGroup = L.layerGroup().addTo(map);
+    const cityLayer = L.layerGroup().addTo(map);
+
+    // ResizeObserver for reliable map resizing
+    if (typeof ResizeObserver !== 'undefined') {
+        const resizeObserver = new ResizeObserver(() => {
+            if (window.map) window.map.invalidateSize();
+        });
+        resizeObserver.observe(document.getElementById('map'));
+    } else {
+        window.addEventListener('resize', function() { if (window.map) window.map.invalidateSize(); });
+    }
+
+    let cityMarkers = {};
+
+    window.clearAll = () => {
+        cityLayer.clearLayers();
+        cityMarkers = {};
+        exploredGroup.clearLayers();
+        pathGroup.clearLayers();
+        if (window.map) window.map.closePopup();
+        if (window.map) window.map.invalidateSize();
+    };
+
+    window.clearPath = () => {
+        exploredGroup.clearLayers();
+        pathGroup.clearLayers();
+        if (window.map) window.map.closePopup();
+        if (window.map) window.map.invalidateSize();
+    };
+
+    window.addCities = (cities) => {
+        const markers = [];
+        cities.forEach(({ lat, lng, name, id }) => {
+            const marker = L.circleMarker([lat, lng], {
+                radius: 6,
+                fillColor: "#3388ff",
+                color: "#000",
+                weight: 1,
+                opacity: 0.8,
+                fillOpacity: 0.6,
+                interactive: true
+            });
+
+            // Dynamic popup creation only when opening
+            marker.on('click', function() {
+                const escapedName = name.replace(/'/g, "\\'");
+                const content = `
+                    <div style="text-align: center; min-width: 120px;">
+                        <b style="font-size: 14px;">${name}</b><br><br>
+                        <button onclick="window.setAsStart(${id}, '${escapedName}')" style="margin-bottom: 8px; width: 100%;">Add as Start City</button><br>
+                        <button onclick="window.setAsTarget(${id}, '${escapedName}')" style="width: 100%;">Add as Target City</button>
+                    </div>
+                `;
+                marker.bindPopup(content).openPopup();
+            });
+
+            cityMarkers[id] = marker;
+            markers.push(marker);
+        });
+
+        requestAnimationFrame(() => {
+            markers.forEach(m => m.addTo(cityLayer));
+        });
+    };
+
+    window.drawPath = (pointsJson) => {
+        pathGroup.clearLayers();
+        const points = JSON.parse(pointsJson);
+        if (!points || points.length === 0) return;
+
+        const latlngs = points.map(p => [p.lat, p.lng]);
+
+        const pathLine = L.polyline(latlngs, {
+            color: 'red',
+            weight: 5,
+            opacity: 0.8,
+            interactive: false
+        }).addTo(pathGroup);
+
+        requestAnimationFrame(() => {
+            if (window.map) window.map.fitBounds(pathLine.getBounds(), { padding: [50, 50] });
+        });
+    };
+
+    window.clearExplored = () => {
+        exploredGroup.clearLayers();
+    };
+
+    window.addExplored = (pointsJson) => {
+        const points = typeof pointsJson === 'string' ? JSON.parse(pointsJson) : pointsJson;
+        if (!points || points.length === 0) return;
+
+        const markers = [];
+        const markerOptions = {
+            radius: 3,
+            fillColor: "#ffaa00",
+            color: "#000",
+            weight: 0.5,
+            opacity: 0.5,
+            fillOpacity: 0.4,
+            interactive: false
+        };
+
+        points.forEach(({ lat, lng }) => {
+            markers.push(L.circleMarker([lat, lng], markerOptions));
+        });
+
+        requestAnimationFrame(() => {
+            markers.forEach(m => m.addTo(exploredGroup));
+        });
+    };
+
+    window.setAsStart = (id, name) => {
+        if (window.javaConnector) {
+            window.javaConnector.setAsStart(id, name);
+            if (window.map) window.map.closePopup();
+        }
+    };
+
+    window.setAsTarget = (id, name) => {
+        if (window.javaConnector) {
+            window.javaConnector.setAsTarget(id, name);
+            if (window.map) window.map.closePopup();
+        }
+    };
+
+    setTimeout(() => { if (window.map) window.map.invalidateSize(); }, 100);
+</script>
+</body>
+</html>

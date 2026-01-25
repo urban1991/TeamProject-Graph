@@ -38,3 +38,6 @@ target/
 /build/
 .gradle/
 !gradle/wrapper/gradle-wrapper.jar
+
+# Local output files
+.output.txt

@@ -6,18 +6,15 @@ import java.util.List;
 public class Vertex {
     private static int countID = 0; // auto ID counter
 
+    public static void resetCounter() {
+        countID = 0;
+    }
+
     private int nr;                    // unique ID
     private String name;
     private int x;
     private int y;
     private List<Edge> edges;
-
-    // --- FIELDS FOR BFS ---
-    private boolean visited = false;
-    private int distance = Integer.MAX_VALUE; // Dystans od startu, MAX_VALUE to symbol nieskończoności
-    private Vertex parent = null;           // Poprzednik na najkrótszej ścieżce
-
-
 
     // --- Construktor ---
     public Vertex(String name, int x, int y) {
@@ -71,9 +68,9 @@ public class Vertex {
     }
 
     // --- Add edge ---
-    public void addEdge(Vertex cel, double distance) {
+    public void addEdge(Vertex target, double distance) {
 
-        this.edges.add(new Edge(cel, distance));
+        this.edges.add(new Edge(target, distance));
     }
 
     public void print(){
@@ -97,31 +94,6 @@ public class Vertex {
                     edge.getTarget().getName(),
                     edge.getDistance()));
         }
-    }
-
-    // --- METHODS FOR BFS ---
-    public boolean isVisited() {
-        return visited;
-    }
-
-    public void setVisited(boolean visited) {
-        this.visited = visited;
-    }
-
-    public int getDistance() {
-        return distance;
-    }
-
-    public void setDistance(int distance) {
-        this.distance = distance;
-    }
-
-    public Vertex getParent() {
-        return parent;
-    }
-
-    public void setParent(Vertex parent) {
-        this.parent = parent;
     }
 
 }
