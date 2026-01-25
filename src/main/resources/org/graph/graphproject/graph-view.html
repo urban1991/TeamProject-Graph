@@ -74,14 +74,13 @@
     const pathGroup = L.layerGroup().addTo(map);
     const cityLayer = L.layerGroup().addTo(map);
 
-    // ResizeObserver is not available in older WebView implementations; guard its usage.
+    // ResizeObserver for reliable map resizing
     if (typeof ResizeObserver !== 'undefined') {
         const resizeObserver = new ResizeObserver(() => {
             if (window.map) window.map.invalidateSize();
         });
         resizeObserver.observe(document.getElementById('map'));
     } else {
-        // Fallback: listen to window resize and invalidate map size
         window.addEventListener('resize', function() { if (window.map) window.map.invalidateSize(); });
     }
 
@@ -185,12 +184,6 @@
         });
     };
 
-    // Old method for compatibility or single call
-    window.drawExplored = (pointsJson) => {
-        window.clearExplored();
-        window.addExplored(pointsJson);
-    };
-
     window.setAsStart = (id, name) => {
         if (window.javaConnector) {
             window.javaConnector.setAsStart(id, name);
@@ -206,8 +199,6 @@
     };
 
     setTimeout(() => { if (window.map) window.map.invalidateSize(); }, 100);
-    setTimeout(() => { if (window.map) window.map.invalidateSize(); }, 500);
-    setTimeout(() => { if (window.map) window.map.invalidateSize(); }, 2000);
 </script>
 </body>
 </html>
