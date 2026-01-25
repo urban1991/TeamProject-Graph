@@ -62,8 +62,21 @@ jlink {
     }
 }
 
+val createPortableApp by tasks.registering(Sync::class) {
+    group = "distribution"
+    description = "folder z aplikacją gotową do uruchomienia bez instalacji."
+
+    dependsOn("jlink")
+
+    from(layout.buildDirectory.dir("image"))
+
+    into(layout.buildDirectory.dir("distributions/GraphApp-Portable"))
+}
+
+
 tasks.jpackage {
     dependsOn("jlink")
+    mustRunAfter(createPortableApp)
 }
 
 tasks.jlinkZip {
