@@ -52,4 +52,12 @@ jlink {
     launcher {
         name = "app"
     }
+    jpackage {
+        imageName = "GraphApp"
+        installerName = "GraphApp"
+        if (System.getProperty("os.name").contains("Windows", ignoreCase = true)) {
+            installerType = "exe"
+            installerOptions = listOf("--win-dir-chooser", "--win-shortcut", "--win-menu")
+        }
+    }
 }
