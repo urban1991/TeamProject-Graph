@@ -79,3 +79,7 @@ public class AStar {
         return path;
     }
 }
+
+/*
+Algorithm Analysis: Confirmed that the AStar implementation uses the correct Euclidean heuristic, consistent with the coordinate system defined in the Vertex class.
+ */
