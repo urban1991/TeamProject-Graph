@@ -74,3 +74,4 @@ public class Dijkstra {
         System.out.println("END");
     }
 }
+//Verified the correctness of Dijkstra's algorithm
