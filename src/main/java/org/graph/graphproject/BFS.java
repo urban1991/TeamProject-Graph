@@ -63,3 +63,8 @@ public class BFS {
         return new PathfindingResult(path, exploredNodes, exploredNodes.size(), durationMs, totalCost);
     }
 }
+/*
+Analysis of the BFS algorithm in BFS.java confirmed that it is correctly implemented in accordance with graph theory.
+It traverses the graph breadth-first, identifying the path with the minimum number of edges (hops) rather than the minimum sum of weights (distance).
+This is the expected behavior for BFS on weighted graphs. Consequently, the resulting path may appear less optimal (arc-shaped) compared to A* or Dijkstra, as BFS ignores edge lengths.
+ */
