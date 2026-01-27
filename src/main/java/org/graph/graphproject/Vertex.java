@@ -16,7 +16,7 @@ public class Vertex {
     private int y;
     private List<Edge> edges;
 
-    // --- Construktor ---
+    // --- Constructor ---
     public Vertex(String name, int x, int y) {
         this.nr = countID++;         // sets unique ID from counter
         this.name = name;
