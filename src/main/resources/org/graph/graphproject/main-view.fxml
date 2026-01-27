@@ -6,9 +6,9 @@
 <?import javafx.scene.web.WebView?>
 <?import org.controlsfx.control.SearchableComboBox?>
 
-<BorderPane prefHeight="800.0" prefWidth="1200.0" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.graph.graphproject.GraphController">
+<BorderPane prefHeight="800.0" prefWidth="1200.0" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.graph.graphproject.GraphController" stylesheets="@style.css">
     <left>
-        <VBox spacing="10.0" prefWidth="300.0" style="-fx-background-color: #f4f4f4;">
+        <VBox spacing="10.0" prefWidth="300.0" style="-fx-background-color: #f4f4f4; -fx-border-color: #dcdcdc; -fx-border-width: 0 1 0 0;">
             <padding>
                 <Insets top="10" right="10" bottom="10" left="10"/>
             </padding>
@@ -20,7 +20,7 @@
 
             <Label text="Neighbor Radius (km):"/>
             <HBox spacing="5.0">
-                <TextField fx:id="neighborRadiusField" text="30.0" promptText="e.g. 30" HBox.hgrow="ALWAYS"/>
+                <TextField fx:id="neighborRadiusField" text="15.0" promptText="e.g. 15" HBox.hgrow="ALWAYS"/>
                 <Button fx:id="rebuildBtn" text="Rebuild" onAction="#onRebuildGraphClick"/>
             </HBox>
 
@@ -41,12 +41,6 @@
                 <RadioButton fx:id="astarRadio" text="A* (Heuristic)" toggleGroup="$algoGroup"/>
             </VBox>
 
-            <Label text="Custom Edge Weight:"/>
-            <HBox spacing="5.0">
-                <TextField fx:id="weightField" promptText="Enter weight" HBox.hgrow="ALWAYS"/>
-                <Button fx:id="setWeightBtn" text="Update" onAction="#onSetWeightClick"/>
-            </HBox>
-
             <Button fx:id="findPathBtn" text="Find Shortest Path" onAction="#onFindPathClick" maxWidth="Infinity" style="-fx-background-color: #4CAF50; -fx-text-fill: white;"/>
             <Button fx:id="clearBtn" text="Clear All Data" onAction="#onClearDataClick" maxWidth="Infinity" style="-fx-background-color: #f44336; -fx-text-fill: white;"/>
 
@@ -54,7 +48,6 @@
 
             <Label text="Statistics" style="-fx-font-weight: bold;"/>
             <Label fx:id="distanceLabel" text="Distance: -"/>
-            <Label fx:id="currentWeightLabel" text="Edge Weight: -"/>
             <Label fx:id="timeLabel" text="Time: -"/>
             <Label fx:id="nodesLabel" text="Nodes Visited: -"/>
 
@@ -62,17 +55,17 @@
 
             <Label text="Legend" style="-fx-font-weight: bold;"/>
             <GridPane hgap="10" vgap="5">
-                <StackPane GridPane.columnIndex="0" GridPane.rowIndex="0" minWidth="20" alignment="CENTER">
+                <StackPane GridPane.columnIndex="0" GridPane.rowIndex="0" minWidth="20">
                     <Region style="-fx-background-color: #3388ff; -fx-min-width: 12; -fx-min-height: 12; -fx-background-radius: 10; -fx-border-color: black; -fx-border-radius: 10;"/>
                 </StackPane>
                 <Label text="City / Node" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
 
-                <StackPane GridPane.columnIndex="0" GridPane.rowIndex="1" minWidth="20" alignment="CENTER">
+                <StackPane GridPane.columnIndex="0" GridPane.rowIndex="1" minWidth="20">
                     <Region style="-fx-background-color: #ffaa00; -fx-min-width: 10; -fx-min-height: 10; -fx-background-radius: 10; -fx-border-color: black; -fx-border-radius: 10;"/>
                 </StackPane>
                 <Label text="Explored Node" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
 
-                <StackPane GridPane.columnIndex="0" GridPane.rowIndex="2" minWidth="20" alignment="CENTER">
+                <StackPane GridPane.columnIndex="0" GridPane.rowIndex="2" minWidth="20">
                     <Region style="-fx-background-color: red; -fx-min-width: 20; -fx-min-height: 4;"/>
                 </StackPane>
                 <Label text="Shortest Path" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
