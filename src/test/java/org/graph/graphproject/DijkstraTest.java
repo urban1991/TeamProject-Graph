@@ -20,16 +20,12 @@ public class DijkstraTest {
         List<Vertex> vertices = List.of(vA, vB, vC, vD, vE);
         graph = new Graph(vertices);
     }
-/*
-Changes Made:
-    Added testNoPath to check the algorithm's behavior when there is no connection between vertices.
-    Added testStartIsTarget to verify the case where the start node is also the target node.
-    Added testDisconnectedGraph to check performance in a disconnected graph.
-    Added testPathWithCycles to confirm the algorithm's correctness in the presen   ce of cycles.
-    Added testNegativeWeights to document behavior with negative edge weights (the current implementation handles simple negative weight cases without negative cycles).
- */
 
 
+
+    /**
+     * Tests if Dijkstra's algorithm correctly finds the path with the minimum total edge weight.
+     */
     @Test
     public void testDijkstraShortestWeight() {
         // A -> B -> C (2 hops, weight 200)
@@ -53,6 +49,9 @@ Changes Made:
         assertEquals(30.0, result.getTotalCost(), 0.001);
     }
 
+    /**
+     * Tests the algorithm's behavior after a manual update of edge weights.
+     */
     @Test
     public void testCustomWeightUpdate() {
         // Initial: A -> B (100)
@@ -68,6 +67,9 @@ Changes Made:
         assertEquals(5.5, res2.getTotalCost(), 0.001);
     }
 
+    /**
+     * Tests the behavior of Dijkstra's algorithm when no path to the target exists.
+     */
     @Test
     public void testNoPath() {
         // A -> B, but C is isolated
@@ -79,6 +81,9 @@ Changes Made:
         assertEquals(0.0, result.getTotalCost(), 0.001);
     }
 
+    /**
+     * Tests the case where the starting vertex is the same as the target vertex.
+     */
     @Test
     public void testStartIsTarget() {
         PathfindingResult result = Dijkstra.findShortestPath(vA, vA, graph);
@@ -88,6 +93,9 @@ Changes Made:
         assertEquals(0.0, result.getTotalCost(), 0.001);
     }
 
+    /**
+     * Tests the algorithm's behavior in a disconnected graph.
+     */
     @Test
     public void testDisconnectedGraph() {
         // A -> B
@@ -102,6 +110,9 @@ Changes Made:
         assertEquals(0.0, result.getTotalCost(), 0.001);
     }
 
+    /**
+     * Tests the algorithm's performance in a graph containing cycles.
+     */
     @Test
     public void testPathWithCycles() {
         // A -> B (10) -> A (10) - cycle
@@ -124,6 +135,10 @@ Changes Made:
         assertEquals(15.0, result.getTotalCost(), 0.001);
     }
 
+    /**
+     * Tests the algorithm's behavior in the presence of negative edge weights.
+     * Note: Classic Dijkstra does not guarantee correctness for negative weights.
+     */
     @Test
     public void testNegativeWeights() {
         // Dijkstra doesn't officially support negative weights, 
@@ -146,8 +161,3 @@ Changes Made:
     }
 }
 
-/*
-Results:
-All tests pass successfully.
-Algorithm verified as stable for all tested scenarios.
- */

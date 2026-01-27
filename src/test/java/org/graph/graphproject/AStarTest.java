@@ -21,18 +21,11 @@ public class AStarTest {
         List<Vertex> vertices = List.of(vStart, vTarget, vDistraction);
         graph = new Graph(vertices);
     }
-/*
-Test Expansion: Added new test cases to AStarTest.java:
-    -testAStarVsDijkstraVsBFS: A direct comparison of all three algorithms on a graph with varied edge weights.
-        Confirmed that A* and Dijkstra find the lowest-cost path, while BFS selects the path with the minimum number of edges (ignoring weights).
-    -testAStarEfficiency: Efficiency verification on a grid-type graph.
-        A* visited significantly fewer nodes than Dijkstra (optimizing the search towards the target) while maintaining the identical final cost.
-    -testAStarOnRealData: A test utilizing data from polandcities.csv, confirming algorithm stability on real-world geographic data.
-    -testAStarNoPath: Verified correct behavior (empty path) when there is no connection between vertices.
 
-Efficiency Test Fix: Adjusted weights in the existing testAStarEfficiency test to better reflect the map scale and highlight differences in the number of visited nodes.
- */
 
+    /**
+     * Tests basic pathfinding by the A* algorithm in a simple graph.
+     */
     @Test
     public void testAStarPath() {
         vStart.addEdge(vTarget, 100);
@@ -45,6 +38,10 @@ Efficiency Test Fix: Adjusted weights in the existing testAStarEfficiency test t
         assertEquals(100.0, result.getTotalCost(), 0.001);
     }
 
+    /**
+     * Tests the efficiency of the A* algorithm compared to Dijkstra's algorithm on a grid-like graph.
+     * A* should visit fewer nodes due to the use of a heuristic.
+     */
     @Test
     public void testAStarEfficiency() {
         // Create a grid-like graph
@@ -86,6 +83,10 @@ Efficiency Test Fix: Adjusted weights in the existing testAStarEfficiency test t
             "A* ("+astarRes.getNodesVisited()+") should be more efficient than Dijkstra ("+dijkstraRes.getNodesVisited()+")");
     }
 
+    /**
+     * Compares the results of A*, Dijkstra, and BFS algorithms.
+     * A* and Dijkstra should find the shortest path by weight, while BFS finds the path with the fewest edges.
+     */
     @Test
     public void testAStarVsDijkstraVsBFS() {
         // Create a graph where BFS finds more hops but higher total cost,
@@ -124,6 +125,9 @@ Efficiency Test Fix: Adjusted weights in the existing testAStarEfficiency test t
         assertTrue(astarRes.getNodesVisited() <= dijkstraRes.getNodesVisited());
     }
 
+    /**
+     * Tests the behavior of the A* algorithm when no path exists between vertices.
+     */
     @Test
     public void testAStarNoPath() {
         Vertex start = new Vertex("S", 0, 0);
@@ -139,6 +143,9 @@ Efficiency Test Fix: Adjusted weights in the existing testAStarEfficiency test t
         assertTrue(bfsRes.getPath().isEmpty());
     }
 
+    /**
+     * Tests the A* algorithm on real data loaded from a CSV file.
+     */
     @Test
     public void testAStarOnRealData() {
         // Load data from polandcities.csv if available
@@ -160,9 +167,3 @@ Efficiency Test Fix: Adjusted weights in the existing testAStarEfficiency test t
         }
     }
 }
-/*
-The A* algorithm functions correctly.
-It finds the optimal path (equivalent to Dijkstra) while being more efficient in terms of visited nodes due to the applied heuristic.
-BFS correctly identifies the "shortest" path in terms of hops, which on weighted graphs is often not the lowest-cost path.
-All tests (5 total in AStarTest.java) pass successfully.
- */

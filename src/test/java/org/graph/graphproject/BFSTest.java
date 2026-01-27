@@ -21,14 +21,11 @@ public class BFSTest {
         List<Vertex> vertices = List.of(vA, vB, vC, vD, vE);
         graph = new Graph(vertices);
     }
-/*
-Added new test cases to BFSTest.java to improve coverage:
-    testBFSLinearPath: Validates pathfinding in a linear vertex arrangement.
-    testBFSCycle: Ensures BFS handles cycles correctly without infinite loops.
-    testBFSDisconnected: Verifies handling of unreachable targets (disconnected graphs).
-    testBFSSameNode: Checks the edge case where start == destination.
-    testBFSShortestHops (updated): Explicitly demonstrates BFS preference for fewer hops (2 hops/200 cost) over lower weight (3 hops/3 cost).
- */
+
+    /**
+     * Tests if BFS finds the path with the minimum number of edges (hops),
+     * ignoring the weights of those edges.
+     */
     @Test
     public void testBFSShortestHops() {
         // A -> B -> C (2 hops, high weight: 100+100=200)
@@ -53,6 +50,9 @@ Added new test cases to BFSTest.java to improve coverage:
         assertEquals(200.0, result.getTotalCost(), 0.001);
     }
 
+    /**
+     * Tests BFS performance on a simple linear path.
+     */
     @Test
     public void testBFSLinearPath() {
         // A -> B -> E
@@ -69,6 +69,9 @@ Added new test cases to BFSTest.java to improve coverage:
         assertEquals(20.0, result.getTotalCost(), 0.001);
     }
 
+    /**
+     * Tests BFS behavior in a graph with cycles and multiple paths with the same number of hops.
+     */
     @Test
     public void testBFSCycle() {
         // A -> B -> E
@@ -91,6 +94,9 @@ Added new test cases to BFSTest.java to improve coverage:
         assertEquals(vE, path.get(2));
     }
 
+    /**
+     * Tests BFS behavior when there is no connection between vertices.
+     */
     @Test
     public void testBFSDisconnected() {
         // A -> B
@@ -103,6 +109,9 @@ Added new test cases to BFSTest.java to improve coverage:
         assertEquals(0, result.getTotalCost());
     }
 
+    /**
+     * Tests the case where the starting vertex is the same as the target vertex.
+     */
     @Test
     public void testBFSSameNode() {
         PathfindingResult result = BFS.findShortestPath(vA, vA, graph);
@@ -112,9 +121,3 @@ Added new test cases to BFSTest.java to improve coverage:
     }
 }
 
-/*
-Verified BFS correctness and expanded coverage in BFSTest.java.
-Tests confirm the algorithm finds the minimum hop count rather than the minimum distance, which explains the sub-optimal 'arc shape' on weighted maps.
-BFS ignores edge weights by design. New test cases for cycles, disconnected graphs, and linear paths all pass.
-The implementation is bug-free; the output differs from Dijkstra/A* due to the inherent nature of Breadth-First Search.
- */
