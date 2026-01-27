@@ -6,10 +6,12 @@ import javafx.scene.control.*;
 import javafx.scene.web.WebView;
 import javafx.scene.web.WebEngine;
 import org.controlsfx.control.SearchableComboBox;
-import java.io.BufferedReader;
+import org.controlsfx.control.Notifications;
+import javafx.util.Duration;
+import javafx.geometry.Pos;
+import javafx.application.Platform;
+
 import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -18,7 +20,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import javafx.stage.FileChooser;
-import javafx.stage.Stage;
 
 public class GraphController {
 
@@ -31,11 +32,8 @@ public class GraphController {
     @FXML private RadioButton bfsRadio;
     @FXML private RadioButton dijkstraRadio;
     @FXML private RadioButton astarRadio;
-    @FXML private TextField weightField;
-    @FXML private Button setWeightBtn;
     @FXML private Button findPathBtn;
     @FXML private Label distanceLabel;
-    @FXML private Label currentWeightLabel;
     @FXML private Label timeLabel;
     @FXML private Label nodesLabel;
     @FXML private WebView webView;
@@ -49,6 +47,30 @@ public class GraphController {
 
     private List<PathfindingResult> currentResults = new ArrayList<>();
     private String lastSearchKey = "";
+
+    /**
+     * Escapes arbitrary text so it can be safely embedded into a single-quoted JavaScript string literal.
+     * This is NOT JSON escaping; it's JS string-literal escaping for: \, ', newlines, and a few edge cases.
+     */
+    private static String escapeForJsSingleQuotedString(String s) {
+        if (s == null) return "";
+        StringBuilder out = new StringBuilder(s.length() + 16);
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            switch (c) {
+                case '\\' -> out.append("\\\\");
+                case '\'' -> out.append("\\'");
+                case '\n' -> out.append("\\n");
+                case '\r' -> out.append("\\r");
+                case '\t' -> out.append("\\t");
+                // These two can break JavaScript parsing in some engines/contexts:
+                case '\u2028' -> out.append("\\u2028");
+                case '\u2029' -> out.append("\\u2029");
+                default -> out.append(c);
+            }
+        }
+        return out.toString();
+    }
 
     @FXML
     public void initialize() {
@@ -74,21 +96,10 @@ public class GraphController {
             outputArea.appendText("Error: graph-view.html not found\n");
         }
 
-        // Handle weight field enabling
-        weightField.setText("10.0");
-        weightField.setDisable(true);
-        setWeightBtn.setDisable(true);
-        algoGroup.selectedToggleProperty().addListener((obs, oldToggle, newToggle) -> {
-            boolean isWeighted = dijkstraRadio.isSelected() || astarRadio.isSelected();
-            weightField.setDisable(!isWeighted);
-            setWeightBtn.setDisable(!isWeighted);
-        });
-
         startCityCombo.valueProperty().addListener((obs, oldVal, newVal) -> {
-            updateCurrentWeightDisplay();
             listNeighbors(newVal);
         });
-        targetCityCombo.valueProperty().addListener((obs, oldVal, newVal) -> updateCurrentWeightDisplay());
+        targetCityCombo.valueProperty().addListener((obs, oldVal, newVal) -> {});
 
         // Auto-load polandcities.csv if it exists
         File defaultFile = new File("polandcities.csv");
@@ -124,7 +135,7 @@ public class GraphController {
                 startCityCombo.getSelectionModel().select(displayName);
                 startCityCombo.setValue(displayName);
                 outputArea.appendText("Selected Start via Map: " + displayName + "\n");
-                updateCurrentWeightDisplay();
+                showNotification("Start City Set", "Start city set to: " + name);
             });
         }
 
@@ -134,7 +145,7 @@ public class GraphController {
                 targetCityCombo.getSelectionModel().select(displayName);
                 targetCityCombo.setValue(displayName);
                 outputArea.appendText("Selected Target via Map: " + displayName + "\n");
-                updateCurrentWeightDisplay();
+                showNotification("Target City Set", "Target city set to: " + name);
             });
         }
 
@@ -155,41 +166,7 @@ public class GraphController {
                     targetCityCombo.getSelectionModel().clearSelection();
                     outputArea.appendText("Reset via Click. Selected Start: " + displayName + "\n");
                 }
-                updateCurrentWeightDisplay();
             });
-        }
-    }
-
-    private void updateCurrentWeightDisplay() {
-        if (graph == null) {
-            currentWeightLabel.setText("Edge Weight: -");
-            return;
-        }
-        String startName = startCityCombo.getValue();
-        String targetName = targetCityCombo.getValue();
-        if (startName == null || targetName == null) {
-            currentWeightLabel.setText("Edge Weight: -");
-            return;
-        }
-
-        Vertex v1 = findVertexByDisplayName(startName);
-        Vertex v2 = findVertexByDisplayName(targetName);
-
-        if (v1 != null && v2 != null) {
-            double weight = -1;
-            for (Edge e : v1.getEdges()) {
-                if (e.getTarget().equals(v2)) {
-                    weight = e.getDistance();
-                    break;
-                }
-            }
-            if (weight >= 0) {
-                currentWeightLabel.setText(String.format(java.util.Locale.US, "Edge Weight: %.2f km", weight));
-            } else {
-                currentWeightLabel.setText("Edge Weight: No direct edge");
-            }
-        } else {
-            currentWeightLabel.setText("Edge Weight: -");
         }
     }
 
@@ -228,11 +205,11 @@ public class GraphController {
 
         rebuildTask.setOnSucceeded(e -> {
             outputArea.appendText("Graph edges successfully rebuilt.\n");
-            updateCurrentWeightDisplay();
             // Refresh map markers and state
             if (isMapLoaded && graph != null) {
                 updateMapWithCities(graph.getVertices());
             }
+            showNotification("Radius Changed", "Nearest neighbors radius has been changed and graph rebuilt.");
         });
 
         new Thread(rebuildTask).start();
@@ -242,11 +219,9 @@ public class GraphController {
     protected void onClearDataClick() {
         startCityCombo.setValue(null);
         targetCityCombo.setValue(null);
-        weightField.setText("10.0");
         neighborRadiusField.setText("30.0");
         outputArea.clear();
         distanceLabel.setText("Distance: -");
-        currentWeightLabel.setText("Edge Weight: -");
         timeLabel.setText("Time: -");
         nodesLabel.setText("Nodes Visited: -");
         currentResults.clear();
@@ -264,57 +239,13 @@ public class GraphController {
                 }
             };
             clearTask.setOnSucceeded(e -> {
-                updateCurrentWeightDisplay();
-                outputArea.appendText("Results and selections cleared. Custom weights and Neighbor Radius reset.\n");
+                outputArea.appendText("Results and selections cleared. Neighbor Radius reset.\n");
+                showNotification("Data Cleared", "All data and selections have been cleared.");
             });
             new Thread(clearTask).start();
         } else {
-            outputArea.appendText("Results and selections cleared. Custom weights reset.\n");
-        }
-    }
-
-    @FXML
-    protected void onSetWeightClick() {
-        if (graph == null) {
-            outputArea.appendText("Error: Load graph data first.\n");
-            return;
-        }
-        String startName = startCityCombo.getValue();
-        String targetName = targetCityCombo.getValue();
-        if (startName == null || targetName == null) {
-            outputArea.appendText("Error: Select start and target cities to set weight between them.\n");
-            return;
-        }
-        String weightText = weightField.getText();
-        try {
-            double weight = Double.parseDouble(weightText);
-            if (weight < 0) throw new NumberFormatException();
-
-            Vertex v1 = findVertexByDisplayName(startName);
-            Vertex v2 = findVertexByDisplayName(targetName);
-
-            if (v1 != null && v2 != null) {
-                updateOrAddEdge(v1, v2, weight);
-                updateOrAddEdge(v2, v1, weight);
-                outputArea.appendText("Weight between " + v1.getName() + " and " + v2.getName() + " set to " + weight + " km\n");
-                updateCurrentWeightDisplay();
-            }
-        } catch (NumberFormatException e) {
-            outputArea.appendText("Error: Invalid weight. Please enter a positive number.\n");
-        }
-    }
-
-    private void updateOrAddEdge(Vertex from, Vertex to, double weight) {
-        boolean found = false;
-        for (Edge e : from.getEdges()) {
-            if (e.getTarget().equals(to)) {
-                e.setDistance(weight);
-                found = true;
-                break;
-            }
-        }
-        if (!found) {
-            from.addEdge(to, weight);
+            outputArea.appendText("Results and selections cleared.\n");
+            showNotification("Data Cleared", "All selections have been cleared.");
         }
     }
 
@@ -385,13 +316,16 @@ public class GraphController {
                         }
                     });
                 }
+                showNotification("Data Loaded", "Graph data has been loaded successfully.");
             } else {
                 outputArea.appendText("Error: Could not load any city data.\n");
+                showNotification("Loading Error", "Could not load any city data from the file.", true);
             }
         });
 
         loadTask.setOnFailed(e -> {
             outputArea.appendText("Critical error during data loading.\n");
+            showNotification("Critical Error", "An error occurred while loading data.", true);
             loadTask.getException().printStackTrace();
         });
 
@@ -406,22 +340,29 @@ public class GraphController {
         for (int i = 0; i < vertices.size(); i += chunkSize) {
             int end = Math.min(i + chunkSize, vertices.size());
             List<Vertex> chunk = vertices.subList(i, end);
-
             StringBuilder sb = new StringBuilder("[");
             for (int j = 0; j < chunk.size(); j++) {
                 Vertex v = chunk.get(j);
-                String escapedName = v.getName().replace("\\", "\\\\").replace("\"", "\\\"").replace("'", "\\'");
+
+                // JSON escaping for the "name" value (inside double-quotes in JSON)
+                String escapedName = v.getName()
+                        .replace("\\", "\\\\")
+                        .replace("\"", "\\\"")
+                        .replace("\n", "\\n")
+                        .replace("\r", "\\r")
+                        .replace("\t", "\\t");
+
                 sb.append("{\"lat\": ").append(String.format(java.util.Locale.US, "%.6f", v.getX() / 1000.0))
-                  .append(", \"lng\": ").append(String.format(java.util.Locale.US, "%.6f", v.getY() / 1000.0))
-                  .append(", \"name\": \"").append(escapedName)
-                  .append("\", \"id\": ").append(v.getNumber()).append("}");
+                        .append(", \"lng\": ").append(String.format(java.util.Locale.US, "%.6f", v.getY() / 1000.0))
+                        .append(", \"name\": \"").append(escapedName)
+                        .append("\", \"id\": ").append(v.getNumber()).append("}");
                 if (j < chunk.size() - 1) sb.append(",");
             }
             sb.append("]");
 
             String jsonString = sb.toString();
-            // JSON.parse is safer and faster than executing raw objects
-            String script = "window.addCities(JSON.parse('" + jsonString.replace("\\", "\\\\").replace("'", "\\'") + "'));";
+            // IMPORTANT: escape for JS single-quoted string literal (not just backslashes/apostrophes)
+            String script = "window.addCities(JSON.parse('" + escapeForJsSingleQuotedString(jsonString) + "'));";
             webEngine.executeScript(script);
         }
         webEngine.executeScript("map.invalidateSize();");
@@ -432,6 +373,7 @@ public class GraphController {
     protected void onFindPathClick() {
         if (graph == null) {
             outputArea.appendText("Error: Load graph data first.\n");
+            showNotification("Missing Data", "Please load graph data first.", true);
             return;
         }
 
@@ -440,6 +382,7 @@ public class GraphController {
 
         if (startDisplayName == null || targetDisplayName == null) {
             outputArea.appendText("Error: Select start and target cities.\n");
+            showNotification("Selection Missing", "Please select both start and target cities.", true);
             return;
         }
 
@@ -520,6 +463,7 @@ public class GraphController {
 
         if (path.isEmpty()) {
             outputArea.appendText("No path found.\n");
+            showNotification("No Path Found", "Could not find a path between the selected cities.", true);
             distanceLabel.setText("Distance: N/A");
             timeLabel.setText(String.format("Time: %.2f ms", durationMs));
             nodesLabel.setText("Nodes Visited: " + visited);
@@ -560,8 +504,7 @@ public class GraphController {
         sendExploredToMap(explored);
 
         String pathJson = jsonBuilder.toString();
-        String escapedPathJson = pathJson.replace("\\", "\\\\").replace("'", "\\'");
-        webEngine.executeScript("window.drawPath('" + escapedPathJson + "');");
+        webEngine.executeScript("window.drawPath('" + escapeForJsSingleQuotedString(pathJson) + "');");
     }
 
     private void sendExploredToMap(List<Vertex> explored) {
@@ -582,9 +525,34 @@ public class GraphController {
             sb.append("]");
 
             String jsonString = sb.toString();
-            String script = "window.addExplored(JSON.parse('" + jsonString.replace("\\", "\\\\").replace("'", "\\'") + "'));";
+            String script = "window.addExplored(JSON.parse('" + escapeForJsSingleQuotedString(jsonString) + "'));";
             webEngine.executeScript(script);
         }
+    }
+
+    private void showNotification(String title, String content) {
+        showNotification(title, content, false);
+    }
+
+    private void showNotification(String title, String content, boolean isError) {
+        Platform.runLater(() -> {
+            Notifications notification = Notifications.create()
+                    .title(title)
+                    .text(content)
+                    .hideAfter(Duration.seconds(3))
+                    .position(Pos.BOTTOM_RIGHT)
+                    .darkStyle();
+
+            if (loadBtn != null && loadBtn.getScene() != null && loadBtn.getScene().getWindow() != null) {
+                notification.owner(loadBtn.getScene().getWindow());
+            }
+
+            if (isError) {
+                notification.showError();
+            } else {
+                notification.showInformation();
+            }
+        });
     }
 
 }

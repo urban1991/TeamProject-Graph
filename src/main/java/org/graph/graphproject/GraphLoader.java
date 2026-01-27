@@ -10,6 +10,14 @@ import java.util.List;
 
 public class GraphLoader {
 
+    /**
+     * Loads graph data from a CSV file and builds the graph structure.
+     * 
+     * @param fileName Path to the CSV file.
+     * @param charset Character encoding of the file.
+     * @param radius Initial radius to connect cities as neighbors.
+     * @return A Graph object containing loaded vertices and edges, or null if loading failed.
+     */
     public static Graph loadGraphData(String fileName, Charset charset, double radius) {
         File file = new File(fileName);
         if (!file.exists()) return null;

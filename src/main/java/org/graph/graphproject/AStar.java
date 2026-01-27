@@ -6,6 +6,15 @@ public class AStar {
 
     private static record Node(Vertex vertex, double fScore) {}
 
+    /**
+     * Finds the shortest path between two vertices using the A* algorithm.
+     * Uses Euclidean distance as a heuristic.
+     * 
+     * @param start The starting vertex.
+     * @param target The destination vertex.
+     * @param graph The graph containing the vertices.
+     * @return A PathfindingResult containing the path, explored nodes, time taken, and total cost.
+     */
     public static PathfindingResult findShortestPath(Vertex start, Vertex target, Graph graph) {
         if (start == null || target == null) return new PathfindingResult(new ArrayList<>(), new ArrayList<>(), 0, 0, 0);
 
