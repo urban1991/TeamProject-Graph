@@ -4,6 +4,15 @@ import java.util.*;
 
 public class BFS {
 
+    /**
+     * Finds the shortest path between two vertices using Breadth-First Search (BFS).
+     * In unweighted graphs, this finds the path with the minimum number of hops.
+     * 
+     * @param start The starting vertex.
+     * @param target The destination vertex.
+     * @param graph The graph containing the vertices.
+     * @return A PathfindingResult containing the path, explored nodes, time taken, and total cost (sum of edge weights).
+     */
     public static PathfindingResult findShortestPath(Vertex start, Vertex target, Graph graph) {
         long startTime = System.nanoTime();
         List<Vertex> exploredNodes = new ArrayList<>();

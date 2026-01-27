@@ -39,6 +39,12 @@ public class Graph {
         return Math.sqrt(dx * dx + dy * dy)*0.1073;
     }
 
+    /**
+     * Builds the graph edges by connecting vertices within a specified distance (threshold).
+     * Uses a grid-based spatial index to efficiently find nearby vertices.
+     * 
+     * @param threshold The maximum distance (radius) to connect two vertices.
+     */
     public void addEdges(double threshold) {
         if (vertices.isEmpty()) return;
         

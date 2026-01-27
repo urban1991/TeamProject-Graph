@@ -2,6 +2,10 @@ package org.graph.graphproject;
 
 import java.util.List;
 
+/**
+ * Represents the result of a pathfinding algorithm execution.
+ * Contains the found path, explored nodes, and performance metrics.
+ */
 public class PathfindingResult {
     private final List<Vertex> path;
     private final List<Vertex> exploredNodes;

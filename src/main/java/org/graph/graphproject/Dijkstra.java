@@ -8,6 +8,14 @@ public class Dijkstra {
 
     private static record Node(Vertex vertex, double distance) {}
 
+    /**
+     * Finds the shortest path between two vertices using Dijkstra's algorithm.
+     * 
+     * @param start The starting vertex.
+     * @param target The destination vertex.
+     * @param graph The graph containing the vertices.
+     * @return A PathfindingResult containing the path, explored nodes, time taken, and total cost.
+     */
     public static PathfindingResult findShortestPath(Vertex start, Vertex target, Graph graph) {
         long startTime = System.nanoTime();
         List<Vertex> exploredNodes = new ArrayList<>();
