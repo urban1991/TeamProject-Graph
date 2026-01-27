@@ -50,7 +50,6 @@ public class GraphController {
 
     /**
      * Escapes arbitrary text so it can be safely embedded into a single-quoted JavaScript string literal.
-     * This is NOT JSON escaping; it's JS string-literal escaping for: \, ', newlines, and a few edge cases.
      */
     private static String escapeForJsSingleQuotedString(String s) {
         if (s == null) return "";
@@ -63,7 +62,6 @@ public class GraphController {
                 case '\n' -> out.append("\\n");
                 case '\r' -> out.append("\\r");
                 case '\t' -> out.append("\\t");
-                // These two can break JavaScript parsing in some engines/contexts:
                 case '\u2028' -> out.append("\\u2028");
                 case '\u2029' -> out.append("\\u2029");
                 default -> out.append(c);
@@ -99,7 +97,6 @@ public class GraphController {
         startCityCombo.valueProperty().addListener((obs, oldVal, newVal) -> {
             listNeighbors(newVal);
         });
-        targetCityCombo.valueProperty().addListener((obs, oldVal, newVal) -> {});
 
         // Auto-load polandcities.csv if it exists
         File defaultFile = new File("polandcities.csv");
@@ -115,56 +112,52 @@ public class GraphController {
 
         outputArea.appendText("\nNeighbors of " + v.getName() + ":\n");
         if (v.getEdges().isEmpty()) {
-            outputArea.appendText("  (No direct neighbors)\n");
+            outputArea.appendText("  (No direct neighbors found)\n");
         } else {
             for (Edge e : v.getEdges()) {
                 outputArea.appendText(String.format(java.util.Locale.US, "  -> %s (#%d): %.2f km\n",
-                    e.getTarget().getName(), e.getTarget().getNumber(), e.getDistance()));
+                        e.getTarget().getName(), e.getTarget().getNumber(), e.getDistance()));
             }
         }
         outputArea.appendText("\n");
     }
 
     /**
-     * Helper class for receiving events from JavaScript
+     * Helper class for receiving events from JavaScript (Map interactions)
      */
     public class JavaConnector {
         public void setAsStart(int id, String name) {
-            javafx.application.Platform.runLater(() -> {
+            Platform.runLater(() -> {
                 String displayName = name + " (#" + id + ")";
                 startCityCombo.getSelectionModel().select(displayName);
                 startCityCombo.setValue(displayName);
-                outputArea.appendText("Selected Start via Map: " + displayName + "\n");
+                outputArea.appendText("Start city selected via map: " + displayName + "\n");
                 showNotification("Start City Set", "Start city set to: " + name);
             });
         }
 
         public void setAsTarget(int id, String name) {
-            javafx.application.Platform.runLater(() -> {
+            Platform.runLater(() -> {
                 String displayName = name + " (#" + id + ")";
                 targetCityCombo.getSelectionModel().select(displayName);
                 targetCityCombo.setValue(displayName);
-                outputArea.appendText("Selected Target via Map: " + displayName + "\n");
+                outputArea.appendText("Target city selected via map: " + displayName + "\n");
                 showNotification("Target City Set", "Target city set to: " + name);
             });
         }
 
         public void onCityClick(int id, String name) {
-            javafx.application.Platform.runLater(() -> {
+            Platform.runLater(() -> {
                 String displayName = name + " (#" + id + ")";
                 if (startCityCombo.getValue() == null) {
-                    startCityCombo.getSelectionModel().select(displayName);
-                    startCityCombo.setValue(displayName);
-                    outputArea.appendText("Selected Start via Click: " + displayName + "\n");
+                    setAsStart(id, name);
                 } else if (targetCityCombo.getValue() == null || !targetCityCombo.getValue().equals(displayName)) {
-                    targetCityCombo.getSelectionModel().select(displayName);
-                    targetCityCombo.setValue(displayName);
-                    outputArea.appendText("Selected Target via Click: " + displayName + "\n");
+                    setAsTarget(id, name);
                 } else {
                     startCityCombo.getSelectionModel().select(displayName);
                     startCityCombo.setValue(displayName);
                     targetCityCombo.getSelectionModel().clearSelection();
-                    outputArea.appendText("Reset via Click. Selected Start: " + displayName + "\n");
+                    outputArea.appendText("Selection reset. New start: " + displayName + "\n");
                 }
             });
         }
@@ -182,34 +175,64 @@ public class GraphController {
     @FXML
     protected void onRebuildGraphClick() {
         if (graph == null) {
-            outputArea.appendText("Error: Load graph data first.\n");
+            outputArea.appendText("Error: Please load graph data first.\n");
             return;
         }
-        double radius = getNeighborRadius();
-        outputArea.appendText("Rebuilding graph edges with Neighbor Radius: " + radius + " km...\n");
 
-        // Clear old results as they are no longer valid for the new graph structure
+        double radius = getNeighborRadius();
+        outputArea.appendText("Attempting to rebuild graph (Radius: " + radius + " km)...\n");
+
         currentResults.clear();
         lastSearchKey = "";
         if (isMapLoaded) {
             webEngine.executeScript("window.clearPath();");
         }
 
-        javafx.concurrent.Task<Void> rebuildTask = new javafx.concurrent.Task<>() {
+        javafx.concurrent.Task<List<Vertex>> rebuildTask = new javafx.concurrent.Task<>() {
             @Override
-            protected Void call() {
+            protected List<Vertex> call() {
+                // 1. Attempt building edges with user-defined radius
                 graph.addEdges(radius);
-                return null;
+
+                // 2. Fetch list of isolated (lonely) vertices
+                return graph.getLonelyVertices();
             }
         };
 
         rebuildTask.setOnSucceeded(e -> {
-            outputArea.appendText("Graph edges successfully rebuilt.\n");
-            // Refresh map markers and state
-            if (isMapLoaded && graph != null) {
-                updateMapWithCities(graph.getVertices());
+            List<Vertex> lonelyOnes = rebuildTask.getValue();
+
+            if (!lonelyOnes.isEmpty()) {
+                outputArea.appendText("❌ Disconnected Graph! Found " + lonelyOnes.size() + " isolated cities.\n");
+                lonelyOnes.stream().limit(20).forEach(v ->
+                        outputArea.appendText("   - " + v.getName() + " (#" + v.getNumber() + ")\n")
+                );
+
+                if(lonelyOnes.size() > 20) {
+                    outputArea.appendText("   - ... and " + (lonelyOnes.size() - 20) + " other cities\n");
+                }
+
+                showNotification(
+                        "Graph Build Error",
+                        "Found " + lonelyOnes.size() + " isolated vertices. Applying rescue radius of 100km.",
+                        true
+                );
+
+                // Revert to rescue radius of 100km
+                neighborRadiusField.setText("100.0");
+                graph.addEdges(100.0);
+                outputArea.appendText("Applied rescue radius: 100.0 km.\n");
+
+            } else {
+                outputArea.appendText("✅ Graph built successfully. All cities are connected.\n");
+
+                showNotification(
+                        "Success",
+                        "Graph built correctly for radius " + radius + " km."
+                );
             }
-            showNotification("Radius Changed", "Nearest neighbors radius has been changed and graph rebuilt.");
+
+            if (isMapLoaded) updateMapWithCities(graph.getVertices());
         });
 
         new Thread(rebuildTask).start();
@@ -240,11 +263,11 @@ public class GraphController {
             };
             clearTask.setOnSucceeded(e -> {
                 outputArea.appendText("Results and selections cleared. Neighbor Radius reset.\n");
-                showNotification("Data Cleared", "All data and selections have been cleared.");
+                showNotification("Data Cleared", "All selections and graph results have been reset.");
             });
             new Thread(clearTask).start();
         } else {
-            outputArea.appendText("Results and selections cleared.\n");
+            outputArea.appendText("Selections cleared.\n");
             showNotification("Data Cleared", "All selections have been cleared.");
         }
     }
@@ -276,13 +299,11 @@ public class GraphController {
         outputArea.appendText("Loading graph data from: " + selectedFile.getName() + "...\n");
         double radius = getNeighborRadius();
 
-        // Use a background task to load data to keep UI responsive
         javafx.concurrent.Task<Graph> loadTask = new javafx.concurrent.Task<>() {
             @Override
             protected Graph call() throws Exception {
-                // Try with Windows-1250 (common for Polish CSVs)
+                // Try with Windows-1250 then UTF-8
                 Graph g = GraphLoader.loadGraphData(selectedFile.getAbsolutePath(), Charset.forName("Windows-1250"), radius);
-                // If it looks like it failed or didn't load anything, try UTF-8
                 if (g == null || g.getVertices().isEmpty()) {
                     g = GraphLoader.loadGraphData(selectedFile.getAbsolutePath(), StandardCharsets.UTF_8, radius);
                 }
@@ -306,27 +327,17 @@ public class GraphController {
 
                 if (isMapLoaded) {
                     updateMapWithCities(vertices);
-                } else {
-                    outputArea.appendText("Waiting for map to load...\n");
-                    webEngine.getLoadWorker().stateProperty().addListener((obs, oldState, newState) -> {
-                        if (newState == Worker.State.SUCCEEDED) {
-                            if (graph != null) {
-                                updateMapWithCities(graph.getVertices());
-                            }
-                        }
-                    });
                 }
-                showNotification("Data Loaded", "Graph data has been loaded successfully.");
+                showNotification("Data Loaded", "Graph data loaded successfully.");
             } else {
                 outputArea.appendText("Error: Could not load any city data.\n");
-                showNotification("Loading Error", "Could not load any city data from the file.", true);
+                showNotification("Loading Error", "No valid city data found in the file.", true);
             }
         });
 
         loadTask.setOnFailed(e -> {
             outputArea.appendText("Critical error during data loading.\n");
-            showNotification("Critical Error", "An error occurred while loading data.", true);
-            loadTask.getException().printStackTrace();
+            showNotification("Critical Error", "An error occurred while processing the file.", true);
         });
 
         new Thread(loadTask).start();
@@ -335,7 +346,6 @@ public class GraphController {
     private void updateMapWithCities(List<Vertex> vertices) {
         webEngine.executeScript("window.clearAll();");
 
-        // Group cities into chunks to avoid long script strings
         int chunkSize = 2000;
         for (int i = 0; i < vertices.size(); i += chunkSize) {
             int end = Math.min(i + chunkSize, vertices.size());
@@ -343,14 +353,10 @@ public class GraphController {
             StringBuilder sb = new StringBuilder("[");
             for (int j = 0; j < chunk.size(); j++) {
                 Vertex v = chunk.get(j);
-
-                // JSON escaping for the "name" value (inside double-quotes in JSON)
                 String escapedName = v.getName()
                         .replace("\\", "\\\\")
                         .replace("\"", "\\\"")
-                        .replace("\n", "\\n")
-                        .replace("\r", "\\r")
-                        .replace("\t", "\\t");
+                        .replace("\n", "\\n");
 
                 sb.append("{\"lat\": ").append(String.format(java.util.Locale.US, "%.6f", v.getX() / 1000.0))
                         .append(", \"lng\": ").append(String.format(java.util.Locale.US, "%.6f", v.getY() / 1000.0))
@@ -360,13 +366,11 @@ public class GraphController {
             }
             sb.append("]");
 
-            String jsonString = sb.toString();
-            // IMPORTANT: escape for JS single-quoted string literal (not just backslashes/apostrophes)
-            String script = "window.addCities(JSON.parse('" + escapeForJsSingleQuotedString(jsonString) + "'));";
+            String script = "window.addCities(JSON.parse('" + escapeForJsSingleQuotedString(sb.toString()) + "'));";
             webEngine.executeScript(script);
         }
         webEngine.executeScript("map.invalidateSize();");
-        outputArea.appendText("Map updated with cities.\n");
+        outputArea.appendText("Map updated with city markers.\n");
     }
 
     @FXML
@@ -381,8 +385,8 @@ public class GraphController {
         String targetDisplayName = targetCityCombo.getValue();
 
         if (startDisplayName == null || targetDisplayName == null) {
-            outputArea.appendText("Error: Select start and target cities.\n");
-            showNotification("Selection Missing", "Please select both start and target cities.", true);
+            outputArea.appendText("Error: Please select both start and target cities.\n");
+            showNotification("Selection Missing", "Both start and target cities must be selected.", true);
             return;
         }
 
@@ -391,7 +395,6 @@ public class GraphController {
 
         if (start == null || target == null) return;
 
-        // Reset results if searching for a different pair
         String searchKey = start.getNumber() + " -> " + target.getNumber();
         if (!searchKey.equals(lastSearchKey)) {
             currentResults.clear();
@@ -399,20 +402,15 @@ public class GraphController {
         }
 
         PathfindingResult result = null;
-        String algoName = "";
-
         if (bfsRadio.isSelected()) {
-            algoName = "BFS";
             result = BFS.findShortestPath(start, target, graph);
-            result.setAlgorithmName(algoName);
+            result.setAlgorithmName("BFS");
         } else if (dijkstraRadio.isSelected()) {
-            algoName = "Dijkstra";
             result = Dijkstra.findShortestPath(start, target, graph);
-            result.setAlgorithmName(algoName);
+            result.setAlgorithmName("Dijkstra");
         } else if (astarRadio.isSelected()) {
-            algoName = "A*";
             result = AStar.findShortestPath(start, target, graph);
-            result.setAlgorithmName(algoName);
+            result.setAlgorithmName("A*");
         }
 
         if (result != null) {
@@ -429,8 +427,8 @@ public class GraphController {
         PathfindingResult leastNodes = Collections.min(currentResults, java.util.Comparator.comparingInt(PathfindingResult::getNodesVisited));
 
         outputArea.appendText("⭐ BEST PERFORMANCE SO FAR ⭐\n");
-        outputArea.appendText("Fastest Algorithm: " + fastest.getAlgorithmName() + " (" + String.format("%.2f", fastest.getTimeMs()) + " ms)\n");
-        outputArea.appendText("Most Efficient (Nodes Visited): " + leastNodes.getAlgorithmName() + " (" + leastNodes.getNodesVisited() + ")\n");
+        outputArea.appendText("Fastest: " + fastest.getAlgorithmName() + " (" + String.format("%.2f", fastest.getTimeMs()) + " ms)\n");
+        outputArea.appendText("Most Efficient: " + leastNodes.getAlgorithmName() + " (" + leastNodes.getNodesVisited() + " nodes)\n");
         outputArea.appendText("--------------------------------\n\n");
     }
 
@@ -440,15 +438,7 @@ public class GraphController {
             int startIdx = displayName.lastIndexOf(" (#") + 3;
             int endIdx = displayName.lastIndexOf(")");
             int id = Integer.parseInt(displayName.substring(startIdx, endIdx));
-            if (id >= 0 && id < graph.getVertices().size()) {
-                Vertex v = graph.getVertices().get(id);
-                if (v.getNumber() == id) return v;
-            }
-            // Fallback just in case
-            return graph.getVertices().stream()
-                    .filter(v -> v.getNumber() == id)
-                    .findFirst()
-                    .orElse(null);
+            return graph.getVertices().get(id);
         } catch (Exception e) {
             return null;
         }
@@ -457,54 +447,33 @@ public class GraphController {
     private void displayResult(PathfindingResult result) {
         List<Vertex> path = result.getPath();
         List<Vertex> explored = result.getExploredNodes();
-        double durationMs = result.getTimeMs();
-        int visited = result.getNodesVisited();
-        double totalDistance = result.getTotalCost();
 
         if (path.isEmpty()) {
-            outputArea.appendText("No path found.\n");
-            showNotification("No Path Found", "Could not find a path between the selected cities.", true);
+            outputArea.appendText("Result: No path found using " + result.getAlgorithmName() + ".\n");
+            showNotification("No Path Found", "No connection exists between selected cities.", true);
             distanceLabel.setText("Distance: N/A");
-            timeLabel.setText(String.format("Time: %.2f ms", durationMs));
-            nodesLabel.setText("Nodes Visited: " + visited);
-
-            if (!explored.isEmpty()) {
-                sendExploredToMap(explored);
-            }
+            if (!explored.isEmpty()) sendExploredToMap(explored);
             return;
         }
 
-        StringBuilder pathStr = new StringBuilder();
         StringBuilder jsonBuilder = new StringBuilder("[");
-
         for (int i = 0; i < path.size(); i++) {
             Vertex v = path.get(i);
-            pathStr.append(v.getName());
-            if (i < path.size() - 1) {
-                pathStr.append(" -> ");
-            }
             jsonBuilder.append(String.format(java.util.Locale.US, "{\"lat\": %.6f, \"lng\": %.6f}", v.getX() / 1000.0, v.getY() / 1000.0));
-            if (i < path.size() - 1) {
-                jsonBuilder.append(",");
-            }
+            if (i < path.size() - 1) jsonBuilder.append(",");
         }
         jsonBuilder.append("]");
 
         outputArea.appendText("Algorithm: " + result.getAlgorithmName() + "\n");
-        outputArea.appendText("Path found in " + String.format("%.2f", durationMs) + " ms\n");
-        outputArea.appendText("Nodes visited: " + visited + "\n");
-        outputArea.appendText("Path: " + pathStr.toString() + "\n");
-        outputArea.appendText("Total Distance: " + String.format("%.2f km", totalDistance) + "\n\n");
+        outputArea.appendText("Time: " + String.format("%.2f", result.getTimeMs()) + " ms | Nodes visited: " + result.getNodesVisited() + "\n");
+        outputArea.appendText("Total Distance: " + String.format("%.2f km", result.getTotalCost()) + "\n\n");
 
-        distanceLabel.setText(String.format("Distance: %.2f km", totalDistance));
-        timeLabel.setText(String.format("Time: %.2f ms", durationMs));
-        nodesLabel.setText("Nodes Visited: " + visited);
+        distanceLabel.setText(String.format("Distance: %.2f km", result.getTotalCost()));
+        timeLabel.setText(String.format("Time: %.2f ms", result.getTimeMs()));
+        nodesLabel.setText("Nodes Visited: " + result.getNodesVisited());
 
-        // Update map
         sendExploredToMap(explored);
-
-        String pathJson = jsonBuilder.toString();
-        webEngine.executeScript("window.drawPath('" + escapeForJsSingleQuotedString(pathJson) + "');");
+        webEngine.executeScript("window.drawPath('" + escapeForJsSingleQuotedString(jsonBuilder.toString()) + "');");
     }
 
     private void sendExploredToMap(List<Vertex> explored) {
@@ -515,7 +484,6 @@ public class GraphController {
         for (int i = 0; i < explored.size(); i += chunkSize) {
             int end = Math.min(i + chunkSize, explored.size());
             List<Vertex> chunk = explored.subList(i, end);
-
             StringBuilder sb = new StringBuilder("[");
             for (int j = 0; j < chunk.size(); j++) {
                 Vertex v = chunk.get(j);
@@ -523,9 +491,7 @@ public class GraphController {
                 if (j < chunk.size() - 1) sb.append(",");
             }
             sb.append("]");
-
-            String jsonString = sb.toString();
-            String script = "window.addExplored(JSON.parse('" + escapeForJsSingleQuotedString(jsonString) + "'));";
+            String script = "window.addExplored(JSON.parse('" + escapeForJsSingleQuotedString(sb.toString()) + "'));";
             webEngine.executeScript(script);
         }
     }
@@ -547,12 +513,8 @@ public class GraphController {
                 notification.owner(loadBtn.getScene().getWindow());
             }
 
-            if (isError) {
-                notification.showError();
-            } else {
-                notification.showInformation();
-            }
+            if (isError) notification.showError();
+            else notification.showInformation();
         });
     }
-
 }
