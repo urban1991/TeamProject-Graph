@@ -103,7 +103,7 @@
     };
 
     window.addCities = (cities) => {
-        const markers = [];
+        if (!cities) return;
         cities.forEach(({ lat, lng, name, id }) => {
             const marker = L.circleMarker([lat, lng], {
                 radius: 6,
@@ -115,7 +115,6 @@
                 interactive: true
             });
 
-            // Dynamic popup creation only when opening
             marker.on('click', function() {
                 const escapedName = name.replace(/'/g, "\\'");
                 const content = `
@@ -129,11 +128,7 @@
             });
 
             cityMarkers[id] = marker;
-            markers.push(marker);
-        });
-
-        requestAnimationFrame(() => {
-            markers.forEach(m => m.addTo(cityLayer));
+            cityLayer.addLayer(marker);
         });
     };
 
