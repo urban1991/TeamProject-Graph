@@ -1,5 +1,9 @@
 package org.graph.graphproject;
 
+/**
+ * Represents a directed edge between two vertices in the graph.
+ * Stores the target vertex and the distance (weight) of the edge.
+ */
 public class Edge {
     private Vertex target;
     private double distance;

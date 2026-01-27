@@ -3,6 +3,10 @@ package org.graph.graphproject;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Represents a vertex (node) in the graph, corresponding to a city.
+ * Contains geographic coordinates and a list of adjacent edges.
+ */
 public class Vertex {
     private static int countID = 0; // auto ID counter
 
