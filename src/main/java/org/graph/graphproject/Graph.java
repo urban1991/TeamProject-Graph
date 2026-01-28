@@ -99,6 +99,16 @@ public class Graph {
         }
         return neighbors;
     }
+
+    public List<Vertex> getLonelyVertices() {
+        List<Vertex> lonely = new ArrayList<>();
+        for (Vertex v : vertices) {
+            if (v.getEdges().isEmpty()) {
+                lonely.add(v);
+            }
+        }
+        return lonely;
+    }
 }
 
 
