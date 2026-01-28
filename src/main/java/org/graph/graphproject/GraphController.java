@@ -73,6 +73,12 @@ public class GraphController {
     @FXML
     public void initialize() {
         webEngine = webView.getEngine();
+
+        // Add error logging
+        webEngine.setOnError(event -> {
+            outputArea.appendText("WebView Error: " + event.getMessage() + "\n");
+        });
+
         webEngine.getLoadWorker().stateProperty().addListener((obs, oldState, newState) -> {
             if (newState == Worker.State.SUCCEEDED) {
                 isMapLoaded = true;
@@ -82,8 +88,20 @@ public class GraphController {
                 javaConnector = new JavaConnector();
                 netscape.javascript.JSObject window = (netscape.javascript.JSObject) webEngine.executeScript("window");
                 window.setMember("javaConnector", javaConnector);
+
+                // Redirect console.log and console.error to our JavaConnector
+                webEngine.executeScript("console.log = function(message) { javaConnector.log(String(message)); };");
+                webEngine.executeScript("console.error = function(message) { javaConnector.log('ERROR: ' + String(message)); };");
+
+                if (graph != null && !graph.getVertices().isEmpty()) {
+                    updateMapWithCities(graph.getVertices());
+                }
             } else if (newState == Worker.State.FAILED) {
                 outputArea.appendText("Error: Failed to load map visualization.\n");
+                Throwable exception = webEngine.getLoadWorker().getException();
+                if (exception != null) {
+                    outputArea.appendText("Exception: " + exception.getMessage() + "\n");
+                }
             }
         });
 
@@ -102,6 +120,8 @@ public class GraphController {
         File defaultFile = new File("polandcities.csv");
         if (defaultFile.exists()) {
             loadDataFromFile(defaultFile);
+        } else {
+            outputArea.appendText("Default data file 'polandcities.csv' not found.\n");
         }
     }
 
@@ -126,6 +146,12 @@ public class GraphController {
      * Helper class for receiving events from JavaScript (Map interactions)
      */
     public class JavaConnector {
+        public void log(String message) {
+            Platform.runLater(() -> {
+                outputArea.appendText("[JS Log] " + message + "\n");
+            });
+        }
+
         public void setAsStart(int id, String name) {
             Platform.runLater(() -> {
                 String displayName = name + " (#" + id + ")";
@@ -302,10 +328,10 @@ public class GraphController {
         javafx.concurrent.Task<Graph> loadTask = new javafx.concurrent.Task<>() {
             @Override
             protected Graph call() throws Exception {
-                // Try with Windows-1250 then UTF-8
-                Graph g = GraphLoader.loadGraphData(selectedFile.getAbsolutePath(), Charset.forName("Windows-1250"), radius);
+                // Try with UTF-8 then Windows-1250
+                Graph g = GraphLoader.loadGraphData(selectedFile.getAbsolutePath(), StandardCharsets.UTF_8, radius);
                 if (g == null || g.getVertices().isEmpty()) {
-                    g = GraphLoader.loadGraphData(selectedFile.getAbsolutePath(), StandardCharsets.UTF_8, radius);
+                    g = GraphLoader.loadGraphData(selectedFile.getAbsolutePath(), Charset.forName("Windows-1250"), radius);
                 }
                 return g;
             }
