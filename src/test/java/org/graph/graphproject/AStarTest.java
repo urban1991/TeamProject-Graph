@@ -22,6 +22,10 @@ public class AStarTest {
         graph = new Graph(vertices);
     }
 
+
+    /**
+     * Tests basic pathfinding by the A* algorithm in a simple graph.
+     */
     @Test
     public void testAStarPath() {
         vStart.addEdge(vTarget, 100);
@@ -34,6 +38,10 @@ public class AStarTest {
         assertEquals(100.0, result.getTotalCost(), 0.001);
     }
 
+    /**
+     * Tests the efficiency of the A* algorithm compared to Dijkstra's algorithm on a grid-like graph.
+     * A* should visit fewer nodes due to the use of a heuristic.
+     */
     @Test
     public void testAStarEfficiency() {
         // Create a grid-like graph
@@ -58,10 +66,10 @@ public class AStarTest {
         for (int x = 0; x < size; x++) {
             for (int y = 0; y < size; y++) {
                 Vertex current = grid.get(x * size + y);
-                if (x + 1 < size) current.addEdge(grid.get((x + 1) * size + y), 1.0);
-                if (y + 1 < size) current.addEdge(grid.get(x * size + (y + 1)), 1.0);
-                if (x - 1 >= 0) current.addEdge(grid.get((x - 1) * size + y), 1.0);
-                if (y - 1 >= 0) current.addEdge(grid.get(x * size + (y - 1)), 1.0);
+                if (x + 1 < size) current.addEdge(grid.get((x + 1) * size + y), 100.0);
+                if (y + 1 < size) current.addEdge(grid.get(x * size + (y + 1)), 100.0);
+                if (x - 1 >= 0) current.addEdge(grid.get((x - 1) * size + y), 100.0);
+                if (y - 1 >= 0) current.addEdge(grid.get(x * size + (y - 1)), 100.0);
             }
         }
         
@@ -73,5 +81,89 @@ public class AStarTest {
         // A* should visit fewer nodes than Dijkstra on a grid
         assertTrue(astarRes.getNodesVisited() <= dijkstraRes.getNodesVisited(), 
             "A* ("+astarRes.getNodesVisited()+") should be more efficient than Dijkstra ("+dijkstraRes.getNodesVisited()+")");
+    }
+
+    /**
+     * Compares the results of A*, Dijkstra, and BFS algorithms.
+     * A* and Dijkstra should find the shortest path by weight, while BFS finds the path with the fewest edges.
+     */
+    @Test
+    public void testAStarVsDijkstraVsBFS() {
+        // Create a graph where BFS finds more hops but higher total cost,
+        // or fewer hops but higher total cost.
+        
+        // Start(0,0), Target(100,0)
+        Vertex start = new Vertex("Start", 0, 0);
+        Vertex target = new Vertex("Target", 100, 0);
+        
+        // Path 1: Start -> Target (1 edge, cost 100) - 1 hop
+        start.addEdge(target, 100.0);
+        
+        // Path 2: Start -> A -> B -> Target (3 edges, cost 10+10+10=30) - 3 hops
+        Vertex vA = new Vertex("A", 33, 10);
+        Vertex vB = new Vertex("B", 66, 10);
+        start.addEdge(vA, 10.0);
+        vA.addEdge(vB, 10.0);
+        vB.addEdge(target, 10.0);
+        
+        Graph comparisonGraph = new Graph(List.of(start, target, vA, vB));
+        
+        PathfindingResult astarRes = AStar.findShortestPath(start, target, comparisonGraph);
+        PathfindingResult dijkstraRes = Dijkstra.findShortestPath(start, target, comparisonGraph);
+        PathfindingResult bfsRes = BFS.findShortestPath(start, target, comparisonGraph);
+        
+        // A* and Dijkstra should find the cheapest path (cost 30)
+        assertEquals(30.0, astarRes.getTotalCost(), 0.001);
+        assertEquals(30.0, dijkstraRes.getTotalCost(), 0.001);
+        assertEquals(4, astarRes.getPath().size()); // Start, A, B, Target
+        
+        // BFS should find the path with fewest hops (1 hop: Start -> Target)
+        assertEquals(2, bfsRes.getPath().size()); // Start, Target
+        assertEquals(100.0, bfsRes.getTotalCost(), 0.001);
+        
+        // A* should be at least as efficient as Dijkstra
+        assertTrue(astarRes.getNodesVisited() <= dijkstraRes.getNodesVisited());
+    }
+
+    /**
+     * Tests the behavior of the A* algorithm when no path exists between vertices.
+     */
+    @Test
+    public void testAStarNoPath() {
+        Vertex start = new Vertex("S", 0, 0);
+        Vertex target = new Vertex("T", 100, 100);
+        Graph g = new Graph(List.of(start, target));
+        
+        PathfindingResult astarRes = AStar.findShortestPath(start, target, g);
+        PathfindingResult dijkstraRes = Dijkstra.findShortestPath(start, target, g);
+        PathfindingResult bfsRes = BFS.findShortestPath(start, target, g);
+        
+        assertTrue(astarRes.getPath().isEmpty());
+        assertTrue(dijkstraRes.getPath().isEmpty());
+        assertTrue(bfsRes.getPath().isEmpty());
+    }
+
+    /**
+     * Tests the A* algorithm on real data loaded from a CSV file.
+     */
+    @Test
+    public void testAStarOnRealData() {
+        // Load data from polandcities.csv if available
+        java.nio.charset.Charset charset = java.nio.charset.StandardCharsets.UTF_8;
+        Graph g = GraphLoader.loadGraphData("polandcities.csv", charset, 50.0);
+        
+        if (g != null && g.getVertices().size() > 10) {
+            Vertex start = g.getVertices().get(0); // Warszawa?
+            Vertex target = g.getVertices().get(g.getVertices().size() - 1);
+            
+            PathfindingResult astarRes = AStar.findShortestPath(start, target, g);
+            PathfindingResult dijkstraRes = Dijkstra.findShortestPath(start, target, g);
+            
+            if (!astarRes.getPath().isEmpty()) {
+                assertEquals(dijkstraRes.getTotalCost(), astarRes.getTotalCost(), 0.1);
+                assertTrue(astarRes.getNodesVisited() <= dijkstraRes.getNodesVisited(),
+                    "A* should not visit more nodes than Dijkstra on real map data");
+            }
+        }
     }
 }

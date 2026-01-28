@@ -10,7 +10,7 @@ public class Dijkstra {
 
     /**
      * Finds the shortest path between two vertices using Dijkstra's algorithm.
-     * 
+     *
      * @param start The starting vertex.
      * @param target The destination vertex.
      * @param graph The graph containing the vertices.

@@ -14,6 +14,10 @@ public class GraphLoaderTest {
     @TempDir
     Path tempDir;
 
+    /**
+     * Tests the correct loading of graph data from a CSV file, including handling different separators
+     * and invalid data.
+     */
     @Test
     public void testLoadGraphData() throws IOException {
         Path csvPath = tempDir.resolve("test_cities.csv");
@@ -43,6 +47,9 @@ public class GraphLoaderTest {
         assertFalse(vertices.get(0).getEdges().isEmpty());
     }
 
+    /**
+     * Tests the loader's behavior when attempting to load a non-existent file.
+     */
     @Test
     public void testLoadNonExistentFile() {
         Graph graph = GraphLoader.loadGraphData("non_existent.csv", StandardCharsets.UTF_8, 30.0);

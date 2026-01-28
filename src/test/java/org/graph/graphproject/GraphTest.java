@@ -7,6 +7,9 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class GraphTest {
 
+    /**
+     * Tests the process of building the graph and automatically adding edges based on a distance threshold.
+     */
     @Test
     public void testGraphBuilding() {
         List<Vertex> vertices = new ArrayList<>();
@@ -35,6 +38,9 @@ public class GraphTest {
         assertTrue(vC.getEdges().isEmpty());
     }
 
+    /**
+     * Tests if changing the distance threshold affects the creation of new edges in the graph.
+     */
     @Test
     public void testThresholdChange() {
         List<Vertex> vertices = new ArrayList<>();
@@ -53,6 +59,9 @@ public class GraphTest {
         assertEquals(1, vertices.get(0).getEdges().size());
     }
 
+    /**
+     * Tests the automatic vertex numbering mechanism and the ability to reset the counter.
+     */
     @Test
     public void testVertexNumbering() {
         Vertex.resetCounter();
