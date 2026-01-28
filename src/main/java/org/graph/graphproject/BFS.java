@@ -7,7 +7,7 @@ public class BFS {
     /**
      * Finds the shortest path between two vertices using Breadth-First Search (BFS).
      * In unweighted graphs, this finds the path with the minimum number of hops.
-     * 
+     *
      * @param start The starting vertex.
      * @param target The destination vertex.
      * @param graph The graph containing the vertices.
@@ -55,7 +55,7 @@ public class BFS {
 
         long endTime = System.nanoTime();
         double durationMs = (endTime - startTime) / 1_000_000.0;
-        
+
         // Cost calculation for BFS (sum of edge weights)
         double totalCost = 0;
         for (int i = 0; i < path.size() - 1; i++) {

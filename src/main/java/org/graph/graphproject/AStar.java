@@ -9,7 +9,7 @@ public class AStar {
     /**
      * Finds the shortest path between two vertices using the A* algorithm.
      * Uses Euclidean distance as a heuristic.
-     * 
+     *
      * @param start The starting vertex.
      * @param target The destination vertex.
      * @param graph The graph containing the vertices.
