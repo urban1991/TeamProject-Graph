@@ -20,7 +20,7 @@
 
             <Label text="Neighbor Radius (km):"/>
             <HBox spacing="5.0">
-                <TextField fx:id="neighborRadiusField" text="15.0" promptText="e.g. 15" HBox.hgrow="ALWAYS"/>
+                <TextField fx:id="neighborRadiusField" text="30.0" promptText="e.g. 15" HBox.hgrow="ALWAYS"/>
                 <Button fx:id="rebuildBtn" text="Rebuild" onAction="#onRebuildGraphClick"/>
             </HBox>
 
