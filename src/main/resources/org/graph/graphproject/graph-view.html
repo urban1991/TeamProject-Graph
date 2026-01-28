@@ -8,12 +8,12 @@
     <link rel="preconnect" href="https://b.basemaps.cartocdn.com">
     <link rel="preconnect" href="https://c.basemaps.cartocdn.com">
     <link rel="preconnect" href="https://d.basemaps.cartocdn.com">
-    <link rel="stylesheet" href="leaflet/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script>
         // Disable 3D transformations for better stability in JavaFX WebView
         window.L_DISABLE_3D = true;
     </script>
-    <script src="leaflet/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
         html, body { height: 100%; margin: 0; padding: 0; }
         #map { height: 100%; width: 100%; background: #f0f0f0; }
@@ -42,7 +42,7 @@
     const myRenderer = L.canvas({ padding: 0.5, tolerance: 10 });
 
     // Set default icon path
-    L.Icon.Default.imagePath = 'leaflet/images/';
+    L.Icon.Default.imagePath = 'https://unpkg.com/leaflet@1.9.4/dist/images/';
 
     // Create a global map reference (exposed on window) so JavaFX WebEngine.executeScript can access it.
     // Use `var` to ensure a global binding that is reachable from global script evaluation.
@@ -54,7 +54,7 @@
         markerZoomAnimation: false
     }).setView([52.0, 19.0], 6);
 
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+    var tiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
         maxZoom: 20,
         attribution: '© OpenStreetMap © CartoDB',
         subdomains: 'abcd',
@@ -63,6 +63,10 @@
         updateInterval: 100,
         keepBuffer: 4
     }).addTo(map);
+
+    tiles.on('tileerror', function(error) {
+        console.error('Tile error: ' + error.url);
+    });
 
     // Force tile refresh on zoomend and viewreset to avoid gray squares in WebView
     map.on('zoomend viewreset', function() {
